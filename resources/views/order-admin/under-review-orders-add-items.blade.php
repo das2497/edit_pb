@@ -1,180 +1,80 @@
-<!DOCTYPE html>
-<html lang="en">
+@extends('layouts.bakery')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Admin | Under Review Orders</title>
-    <link rel="icon" href="{{ asset('assets/images/logo.png') }}">
+@section('title', 'Under Review Orders Add Items | Perera Bakers')
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="{{ asset('assets/vendor/bootstrap/css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/circular-std/style.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/libs/css/style.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/fontawesome/css/fontawesome-all.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/charts/chartist-bundle/chartist.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/charts/morris-bundle/morris.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/material-design-iconic-font/css/materialdesignicons.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/charts/c3charts/c3.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/flag-icon-css/flag-icon.min.css') }}">
+@section('content')
 
-</head>
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-4">
+    <div>
+        <h1 class="display-font page-title mb-1">Under Review Orders — Add Items</h1>
+        <div class="page-sub">Dashboard / Under Review Orders / <span class="mono">{{ $order_number }}</span> / Add Items</div>
+    </div>
+    <div>
+        <a href="/order-admin/under-review-orders-view/{{ $order_number }}" class="btn btn-soft">Go Back</a>
+    </div>
+</div>
 
-<body>
+@include('components.bakery.alerts')
 
-    <!-- header  -->
-    @include('order-admin.components.header')
-    <!-- /header  -->
-
-    <!-- menu -->
-    @include('order-admin.components.menu')
-    <!-- /menu -->
-
-    <!-- content -->
-    <div class="dashboard-wrapper">
-        <div class="dashboard-ecommerce">
-            <div class="container-fluid dashboard-content ">
-                <div class="row">
-                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                        <div class="page-header">
-                            <h2 class="pageheader-title"> Under Review Orders Add Items </h2>
-                            <div class="page-breadcrumb">
-                                <nav aria-label="breadcrumb">
-                                    <ol class="breadcrumb">
-                                        <li class="breadcrumb-item"><a href="/order-admin/dashboard" class="breadcrumb-link">Dashboard</a></li>
-                                        <li class="breadcrumb-item active" aria-current="page">Under Review Orders Add Items</li>
-                                    </ol>
-                                </nav>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="ecommerce-widget">
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="card">
-                                <h5 class="card-header">Under Review Orders Add Items <a href="/order-admin/under-review-orders-view/{{$order_number}}" class="btn btn-outline-danger m-l-10 float-right">Go Back</a></h5>
-                                @if ($errors->any())
-                                <div class="alert alert-danger">
-                                    <ul>
-                                        @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                                @endif
-                                @if (session('success'))
-                                <div class="alert alert-success">
-                                    {{ session('success') }}
-                                </div>
-                                @endif
-                                @if (session('error'))
-                                <div class="alert alert-danger">
-                                    {{ session('error') }}
-                                </div>
-                                @endif
-                                <div class="alert alert-danger" style="display: none;" id="warning">
-                                    <p class="text-center">Pleace select a shop and search or this dosn't have any item in the cart!</p>
-                                </div>
-                                <div class="input-group flex-nowrap p-2">
-                                    <form action="/order-admin/processing-orders-add-item" method="GET" class="input-group flex-nowrap p-2">
-                                        @csrf
-                                        <input type="text" class="form-control" id="" placeholder="Search Orders" aria-describedby="addon-wrapping" name="search">
-                                        <span class="input-group-text btn" id="addon-wrapping" onclick="">Search</span>
-                                        <select class="form-control m-l-10" id="category" name="category">
-                                            <option value="" @selected(session('category')=='' )>All category</option>
-                                            @foreach ( $categories as $category )
-                                            <option value="{{$category->category}}" @selected(session('category')==$category->category)>{{$category->category}}</option>
-                                            @endforeach
-                                        </select>
-                                        <input type="hidden" value="{{ $order_number }}" name="order_number">
-                                        <button type="submit" class="btn btn-outline-primary m-l-10">Search</button>
-                                    </form>
-                                </div>
-
-                                <div class="card-body p-0">
-                                    <div class="table-responsive">
-                                        <table class="table">
-                                            <thead class="bg-light">
-                                                <tr class="border-0">
-                                                    <th class="border-0">#</th>
-                                                    <th class="border-0 d-none d-lg-block">Item image</th>
-                                                    <th class="border-0">Item Id</th>
-                                                    <th class="border-0">Item Name English</th>
-                                                    <th class="border-0">Quantity</th>
-                                                    <th class="border-0"></th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach ($products as $product)
-                                                <tr @if(isset($cart_items) && $cart_items->contains('item_number', $product->item_number)) class="table-success" @endif>
-                                                    <td>{{ $loop->iteration }}</td>
-                                                    <td><img src="{{asset('assets/images/item-images/'.$product->img)}}" alt="" width="50" /></td>
-                                                    <td>{{$product->item_number}}</td>
-                                                    <td>{{$product->name_english}}</td>
-                                                    <td>
-                                                        @if (isset($cart_items) && $cart_items->contains('item_number', $product->item_number))
-                                                        <input class="form-control" type="number" name="qty" value="{{ $cart_items->firstWhere('item_number', $product->item_number)->qty }}" disabled>
-                                                    </td>
-                                                    <td>
-                                                    <td><button class="btn btn-outline-success disabled">Add item to processing orders</button></td>
-                                                    </td>
-                                                    @else
-                                                    <form action="{{route('order-admin-under-review-orders-add-items-process')}}" method="POST">
-                                                        @csrf
-                                                        <input class="form-control" type="number" min="0" step="0.01" required pattern="[0-9]+(\.[0-9]+)?" name="qty">
-                                                        <input type="hidden" name="order_number" value="{{ $order_number }}">
-                                                        <input type="hidden" name="item_number" value="{{ $product->item_number }}">
-                                                        <input type="hidden" name="shop" value="{{ $shop }}">
-                                                        <td>
-                                                        <td><button type="submit" class="btn btn-outline-success">Add item to processing orders</button></td>
-                                                        </td>
-                                                    </form>
-                                                    @endif
-                                                </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-
-                </div>
-            </div>
+<div class="panel">
+    <div class="panel-head">
+        <div>
+            <h2>Products</h2>
+            <div class="sub">Items already in the order are highlighted</div>
         </div>
     </div>
-    <!-- /content -->
+    <form action="/order-admin/under-review-orders-add-item" method="GET" class="d-flex flex-wrap gap-2 mb-3">
+        <input type="text" class="form-control" placeholder="Search products…" name="search" style="max-width:280px;">
+        <select class="form-select" id="category" name="category" style="max-width:240px;">
+            <option value="" @selected(session('category') == '')>All category</option>
+            @foreach ($categories as $category)
+            <option value="{{ $category->category }}" @selected(session('category') == $category->category)>{{ $category->category }}</option>
+            @endforeach
+        </select>
+        <input type="hidden" value="{{ $order_number }}" name="order_number">
+        <button type="submit" class="btn btn-accent">Search</button>
+    </form>
+    <div class="table-responsive">
+        <table class="table table-bakery align-middle">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Image</th>
+                    <th>Item Id</th>
+                    <th>Item Name</th>
+                    <th>Quantity</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($products as $product)
+                @php $inCart = isset($cart_items) && $cart_items->contains('item_number', $product->item_number); @endphp
+                <tr @if ($inCart) class="in-cart" @endif>
+                    <td>{{ $loop->iteration }}</td>
+                    <td><img class="img-thumb" src="{{ asset('assets/images/item-images/' . $product->img) }}" alt=""></td>
+                    <td class="mono">{{ $product->item_number }}</td>
+                    <td>{{ $product->name_english }}</td>
+                    @if ($inCart)
+                    <td><input class="form-control form-control-sm" type="number" value="{{ $cart_items->firstWhere('item_number', $product->item_number)->qty }}" disabled style="max-width:120px;"></td>
+                    <td><button class="btn btn-soft btn-sm disabled">Already added</button></td>
+                    @else
+                    @php $fid = 'add-' . $loop->iteration; @endphp
+                    <td><input class="form-control form-control-sm" type="number" min="0" step="0.01" required pattern="[0-9]+(\.[0-9]+)?" name="qty" form="{{ $fid }}" style="max-width:120px;"></td>
+                    <td>
+                        <form action="{{ route('order-admin-under-review-orders-add-items-process') }}" method="POST" id="{{ $fid }}">
+                            @csrf
+                            <input type="hidden" name="order_number" value="{{ $order_number }}">
+                            <input type="hidden" name="item_number" value="{{ $product->item_number }}">
+                            <input type="hidden" name="shop" value="{{ $shop }}">
+                            <button type="submit" class="btn btn-accent btn-sm">Add item</button>
+                        </form>
+                    </td>
+                    @endif
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
 
-
-    <!-- jQuery 3.3.1 -->
-    <script src="{{ asset('assets/vendor/jquery/jquery-3.3.1.min.js') }}"></script>
-    <!-- Bootstrap bundle JS -->
-    <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.js') }}"></script>
-    <!-- SlimScroll JS -->
-    <script src="{{ asset('assets/vendor/slimscroll/jquery.slimscroll.js') }}"></script>
-    <!-- Main JS -->
-    <script src="{{ asset('assets/libs/js/main-js.js') }}"></script>
-    <!-- Chartist JS -->
-    <script src="{{ asset('assets/vendor/charts/chartist-bundle/chartist.min.js') }}"></script>
-    <!-- Sparkline JS -->
-    <script src="{{ asset('assets/vendor/charts/sparkline/jquery.sparkline.js') }}"></script>
-    <!-- Morris JS -->
-    <script src="{{ asset('assets/vendor/charts/morris-bundle/raphael.min.js') }}"></script>
-    <script src="{{ asset('assets/vendor/charts/morris-bundle/morris.js') }}"></script>
-    <!-- C3 Charts JS -->
-    <script src="{{ asset('assets/vendor/charts/c3charts/c3.min.js') }}"></script>
-    <script src="{{ asset('assets/vendor/charts/c3charts/d3-5.4.0.min.js') }}"></script>
-    <script src="{{ asset('assets/vendor/charts/c3charts/C3chartjs.js') }}"></script>
-    <!-- Dashboard E-commerce JS -->
-    <script src="{{ asset('assets/libs/js/dashboard-ecommerce.js') }}"></script>
-    <!-- Chart Bundle JS -->
-    <script src="{{ asset('assets/vendor/charts/charts-bundle/Chart.bundle.js') }}"></script>
-    <script src="{{ asset('assets/vendor/charts/charts-bundle/chartjs.js') }}"></script>
-
-</body>
-
-</html>
+@endsection
