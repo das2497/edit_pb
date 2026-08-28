@@ -261,7 +261,15 @@ class Dashboard extends Controller
 
         $latest_orders = DB::table('orders')
             ->join('shops', 'orders.shop', '=', 'shops.branch_code')
-            ->select('orders.*', 'shops.*', 'orders.created_at as order_created_at')
+            ->select(
+                'orders.id',
+                'orders.unique_id',
+                'orders.total_price',
+                'orders.time_period',
+                'orders.shop',
+                'orders.created_at as order_created_at',
+                'shops.name as shop_name'
+            )
             ->orderByDesc('orders.created_at')
             ->limit(10)
             ->get();

@@ -17,6 +17,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Processing Transfer Admin Email
+    |--------------------------------------------------------------------------
+    |
+    | The order-admin account allowed to run the manual "Processing to
+    | Completed" transfer from the dashboard. Override via the
+    | PROCESSING_TRANSFER_EMAIL variable in .env if it ever changes.
+    |
+    */
+
+    'processing_transfer_email' => env('PROCESSING_TRANSFER_EMAIL', 'adminkusaldilshan@gmail.com'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |

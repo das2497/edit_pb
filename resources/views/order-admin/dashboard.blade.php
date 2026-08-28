@@ -66,10 +66,10 @@
                 <!-- ============================================================== -->
                 <div class="ecommerce-widget">
 
-                    @if (Auth::user()->role === 'o_admin' && Auth::user()->email === 'adminkusaldilshan@gmail.com')
+                    @if (Auth::user()->role === 'o_admin' && Auth::user()->email === config('app.processing_transfer_email', 'adminkusaldilshan@gmail.com'))
                         <div class="row mb-2 g-2">
                             <div class="col-12 col-lg-3 d-grid">
-                                <a href="/processing-transfer" id="refresh" class="btn btn-danger mb-2 w-100">Processing to
+                                <a href="/processing-transfer" class="btn btn-danger mb-2 w-100 refresh-link">Processing to
                                     Completed</a> <!-- Added w-100 -->
                             </div>
                         </div>
@@ -113,23 +113,23 @@
                                         </div>
                                         <div class="row">
                                             <div class="col-12 col-lg-3 d-grid">
-                                                <a href="{{route('morning-summary')}}" id="refresh"
-                                                    class="btn btn-primary mb-2 w-100">Refresh Morning Summary</a>
+                                                <a href="{{route('morning-summary')}}"
+                                                    class="btn btn-primary mb-2 w-100 refresh-link">Refresh Morning Summary</a>
                                                 <!-- Added w-100 -->
                                             </div>
                                             <div class="col-12 col-lg-3 d-grid">
-                                                <a href="{{route('evening-summary')}}" id="refresh"
-                                                    class="btn btn-primary mb-2 w-100">Refresh Evening Summary</a>
+                                                <a href="{{route('evening-summary')}}"
+                                                    class="btn btn-primary mb-2 w-100 refresh-link">Refresh Evening Summary</a>
                                                 <!-- Added w-100 -->
                                             </div>
                                             <div class="col-12 col-lg-3 d-grid">
-                                                <a href="{{route('morning-shop-report')}}" id="refresh"
-                                                    class="btn btn-primary mb-2 w-100">Refresh Morning Shop Report</a>
+                                                <a href="{{route('morning-shop-report')}}"
+                                                    class="btn btn-primary mb-2 w-100 refresh-link">Refresh Morning Shop Report</a>
                                                 <!-- Added w-100 -->
                                             </div>
                                             <div class="col-12 col-lg-3 d-grid">
-                                                <a href="{{route('evening-shop-report')}}" id="refresh"
-                                                    class="btn btn-primary mb-2 w-100">Refresh Evening Shop Report</a>
+                                                <a href="{{route('evening-shop-report')}}"
+                                                    class="btn btn-primary mb-2 w-100 refresh-link">Refresh Evening Shop Report</a>
                                                 <!-- Added w-100 -->
                                             </div>
                                         </div>
@@ -219,7 +219,7 @@
                                     <div class="card-body">
                                         <h5 class="text-muted">Today Total Revenue</h5>
                                         <div class="metric-value d-inline-block">
-                                            <h1 class="mb-1" id="today_total_revenue" </h1>
+                                            <h1 class="mb-1" id="today_total_revenue"></h1>
                                         </div>
                                         <div class="metric-label d-inline-block float-right font-weight-bold">
 
@@ -378,7 +378,7 @@
                     <div class="row">
                         <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12">
                             <div class="card">
-                                <h5 class="card-header">Resent Orders</h5>
+                                <h5 class="card-header">Recent Orders</h5>
                                 <div class="card-body">
                                     <div class="table-responsive ">
                                         <table class="table">
@@ -462,26 +462,32 @@
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
     <script>
+        // Null-safe element getter: returns the element, or a detached dummy
+        // so JS never crashes when an element is not rendered for some roles.
+        function el(id) {
+            return document.getElementById(id) || document.createElement('div');
+        }
+
         function initialLoad() {
             axios.get('{{ route("order-admin.first-load-data") }}')
                 .then(res => {
                     const d = res.data;
 
                     // ── Dashboard stats ──
-                    document.getElementById('pending_orders_count').innerHTML = d.stats.pending_orders_count;
-                    document.getElementById('processing_orders_count').innerHTML = d.stats.processing_orders_count;
-                    document.getElementById('complete_orders_count').innerHTML = d.stats.complete_orders_count;
-                    document.getElementById('under_review_orders_count').innerHTML = d.stats.under_review_orders_count;
+                    el('pending_orders_count').innerHTML = d.stats.pending_orders_count;
+                    el('processing_orders_count').innerHTML = d.stats.processing_orders_count;
+                    el('complete_orders_count').innerHTML = d.stats.complete_orders_count;
+                    el('under_review_orders_count').innerHTML = d.stats.under_review_orders_count;
 
-                    document.getElementById('today_total_revenue').innerHTML =
+                    el('today_total_revenue').innerHTML =
                         'රු. ' + parseFloat(d.stats.today_total_revenue).toLocaleString('en-US', { minimumFractionDigits: 2 });
 
-                    document.getElementById('weeks_gap').innerHTML = `(${d.stats.startOfThisWeek} to ${d.stats.endOfThisWeek})`;
-                    document.getElementById('last7Days_total_revenue').innerHTML =
+                    el('weeks_gap').innerHTML = `(${d.stats.startOfThisWeek} to ${d.stats.endOfThisWeek})`;
+                    el('last7Days_total_revenue').innerHTML =
                         'රු. ' + parseFloat(d.stats.last7Days_total_revenue).toLocaleString('en-US', { minimumFractionDigits: 2 });
 
-                    document.getElementById('month_gap').innerHTML = `(${d.stats.startOfThisMonth} to ${d.stats.endOfThisMonth})`;
-                    document.getElementById('lastMonth_total_revenue').innerHTML =
+                    el('month_gap').innerHTML = `(${d.stats.startOfThisMonth} to ${d.stats.endOfThisMonth})`;
+                    el('lastMonth_total_revenue').innerHTML =
                         'රු. ' + parseFloat(d.stats.lastMonth_total_revenue).toLocaleString('en-US', { minimumFractionDigits: 2 });
                 })
                 .catch(err => {
@@ -490,33 +496,33 @@
         }
 
         function loadDashboardData() {
-            document.getElementById('rfs').style.display = 'none';
-            document.getElementById('spn').style.display = 'block';
+            el('rfs').style.display = 'none';
+            el('spn').style.display = 'block';
             axios.get('{{ route("api.order-admin.dashboard-data") }}')
                 .then(res => {
                     const d = res.data.stats; // shortcut for easier access
 
                     // Update Stats
-                    document.getElementById('pending_orders_count').innerHTML = d.pending_orders_count;
-                    document.getElementById('processing_orders_count').innerHTML = d.processing_orders_count;
-                    document.getElementById('complete_orders_count').innerHTML = d.complete_orders_count;
-                    document.getElementById('under_review_orders_count').innerHTML = d.under_review_orders_count;
+                    el('pending_orders_count').innerHTML = d.pending_orders_count;
+                    el('processing_orders_count').innerHTML = d.processing_orders_count;
+                    el('complete_orders_count').innerHTML = d.complete_orders_count;
+                    el('under_review_orders_count').innerHTML = d.under_review_orders_count;
 
-                    document.getElementById('today_total_revenue').innerHTML =
+                    el('today_total_revenue').innerHTML =
                         'රු. ' + parseFloat(d.today_total_revenue).toLocaleString('en-US', {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2
                         });
 
-                    document.getElementById('weeks_gap').innerHTML = `(${d.startOfThisWeek} to ${d.endOfThisWeek})`;
-                    document.getElementById('last7Days_total_revenue').innerHTML =
+                    el('weeks_gap').innerHTML = `(${d.startOfThisWeek} to ${d.endOfThisWeek})`;
+                    el('last7Days_total_revenue').innerHTML =
                         'රු. ' + parseFloat(d.last7Days_total_revenue).toLocaleString('en-US', {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2
                         });
 
-                    document.getElementById('month_gap').innerHTML = `(${d.startOfThisMonth} to ${d.endOfThisMonth})`;
-                    document.getElementById('lastMonth_total_revenue').innerHTML =
+                    el('month_gap').innerHTML = `(${d.startOfThisMonth} to ${d.endOfThisMonth})`;
+                    el('lastMonth_total_revenue').innerHTML =
                         'රු. ' + parseFloat(d.lastMonth_total_revenue).toLocaleString('en-US', {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2
@@ -541,7 +547,7 @@
                         window.myBarChart.destroy();
                     }
 
-                    const barCtx = document.getElementById('barChart').getContext('2d');
+                    const barCtx = el('barChart').getContext('2d');
 
                     window.myBarChart = new Chart(barCtx, {
                         type: 'bar',
@@ -574,15 +580,18 @@
 
                     //--------------------------------------------------------------------------------------------------------------
                     // === TOP 10 SELLING SHOPS PIE CHART ===
-                    const ctx = document.getElementById('topSellingShopsChart').getContext('2d');
-                    let chart = null;
+                    const ctx = el('topSellingShopsChart').getContext('2d');
+                    // Destroy previous chart if exists
+                    if (window.topShopsChart instanceof Chart) {
+                        window.topShopsChart.destroy();
+                    }
 
                     const {
                         topSellingShops_labels,
                         topSellingShops_data
                     } = d.topSellingShops;
 
-                    chart = new Chart(ctx, {
+                    window.topShopsChart = new Chart(ctx, {
                         type: 'pie',
                         data: {
                             labels: topSellingShops_labels,
@@ -610,8 +619,7 @@
                         }
                     });
                     //-------------------------------------------------------------------------------------------------------------
-                    const ctxItems = document.getElementById('topSellingItemsChart').getContext('2d');
-                    let chartItems = null;
+                    const ctxItems = el('topSellingItemsChart').getContext('2d');
 
                     // Safe destructuring with defaults
                     const {
@@ -620,11 +628,11 @@
                     } = d.topSellingItems || {};
 
                     // Destroy existing chart
-                    if (chartItems) {
-                        chartItems.destroy();
+                    if (window.topItemsChart instanceof Chart) {
+                        window.topItemsChart.destroy();
                     }
 
-                    chartItems = new Chart(ctxItems, {
+                    window.topItemsChart = new Chart(ctxItems, {
                         type: 'pie',
                         data: {
                             labels: topItems_labels,
@@ -662,17 +670,16 @@
                     });
                     //--------------------------------------------------------------------------------------------------------------
                     // last 30 days revenue chart update
-                    const ctx30days = document.getElementById('past30DaysRevenueChart').getContext('2d');
-                    let chart30days = null;
+                    const ctx30days = el('past30DaysRevenueChart').getContext('2d');
                     const {
                         labels: revenueLabels,
                         data: revenueData
                     } = d.revenueData;
                     // Destroy previous chart if exists
-                    if (chart30days instanceof Chart) {
-                        chart30days.destroy();
+                    if (window.rev30Chart instanceof Chart) {
+                        window.rev30Chart.destroy();
                     }
-                    chart30days = new Chart(ctx30days, {
+                    window.rev30Chart = new Chart(ctx30days, {
                         type: 'bar',
                         data: {
                             labels: revenueLabels,
@@ -715,17 +722,16 @@
 
                     //--------------------------------------------------------------------------------------------------------------
                     // Update Top Selling Reps all Time Chart
-                    const ctxRepsAllTime = document.getElementById('topSellingRepsAllTimeChart').getContext('2d');
-                    let chartRepsAllTime = null;
+                    const ctxRepsAllTime = el('topSellingRepsAllTimeChart').getContext('2d');
                     const {
                         labels: repLabelsAllTime,
                         data: repDataAllTime
                     } = d.topSellingRepsAllTime.chartData;
                     // Destroy previous chart if exists
-                    if (chartRepsAllTime instanceof Chart) {
-                        chartRepsAllTime.destroy();
+                    if (window.repsAllTimeChart instanceof Chart) {
+                        window.repsAllTimeChart.destroy();
                     }
-                    chartRepsAllTime = new Chart(ctxRepsAllTime, {
+                    window.repsAllTimeChart = new Chart(ctxRepsAllTime, {
                         type: 'bar',
                         data: {
                             labels: repLabelsAllTime,
@@ -766,7 +772,7 @@
                         }
                     });
 
-                    const tableBody = document.getElementById('topRepsTableBody');
+                    const tableBody = el('topRepsTableBody');
                     // Clear existing table rows
                     tableBody.innerHTML = '';
                     // Populate table with new data
@@ -785,17 +791,16 @@
                     });
                     //-------------------------------------------------------------------------------------------------
                     // Update Top Selling Reps Today Chart
-                    const ctxRepsToday = document.getElementById('topSellingRepsTodayChart').getContext('2d');
-                    let chartRepsToday = null;
+                    const ctxRepsToday = el('topSellingRepsTodayChart').getContext('2d');
                     const {
                         labels: repLabelsToday,
                         data: repDataToday
                     } = d.topSellingRepsToday.chartData;
                     // Destroy previous chart if exists
-                    if (chartRepsToday instanceof Chart) {
-                        chartRepsToday.destroy();
+                    if (window.repsTodayChart instanceof Chart) {
+                        window.repsTodayChart.destroy();
                     }
-                    chartRepsToday = new Chart(ctxRepsToday, {
+                    window.repsTodayChart = new Chart(ctxRepsToday, {
                         type: 'bar',
                         data: {
                             labels: repLabelsToday,
@@ -837,7 +842,7 @@
                     });
 
                     // Update Top Selling Reps Today Table
-                    const tableBodyToday = document.getElementById('top_selling_reps_today');
+                    const tableBodyToday = el('top_selling_reps_today');
                     // Clear existing table rows
                     tableBodyToday.innerHTML = '';
                     // Populate table with new data
@@ -857,17 +862,16 @@
 
                     //-------------------------------------------------------------------------------------------------
                     // Update Top Selling Reps Last 30 Days Chart
-                    const ctxReps30Days = document.getElementById('topSellingRepsLast30DaysChart').getContext('2d');
-                    let chartReps30Days = null;
+                    const ctxReps30Days = el('topSellingRepsLast30DaysChart').getContext('2d');
                     const {
                         labels: repLabels30Days,
                         data: repData30Days
                     } = d.topSellingRepsLast30Days.chartData;
                     // Destroy previous chart if exists
-                    if (chartReps30Days instanceof Chart) {
-                        chartReps30Days.destroy();
+                    if (window.reps30Chart instanceof Chart) {
+                        window.reps30Chart.destroy();
                     }
-                    chartReps30Days = new Chart(ctxReps30Days, {
+                    window.reps30Chart = new Chart(ctxReps30Days, {
                         type: 'bar',
                         data: {
                             labels: repLabels30Days,
@@ -909,7 +913,7 @@
                     });
 
                     // Update Top Selling Reps Last 30 Days Table
-                    const tableBody30Days = document.getElementById('top_selling_reps_last_30_days');
+                    const tableBody30Days = el('top_selling_reps_last_30_days');
                     // Clear existing table rows
                     tableBody30Days.innerHTML = '';
                     // Populate table with new data
@@ -929,7 +933,7 @@
 
                     //-------------------------------------------------------------------------------------------------
                     // Update Latest Orders Table
-                    const latestOrdersBody = document.getElementById('latestOrdersBody');
+                    const latestOrdersBody = el('latestOrdersBody');
                     // Clear existing table rows
                     latestOrdersBody.innerHTML = '';
                     // Populate table with new data
@@ -962,7 +966,7 @@
 
                     //-------------------------------------------------------------------------------------------------
                     // Update Top 10 Orders Table
-                    const top10OrdersBody = document.getElementById('top10OrdersBody');
+                    const top10OrdersBody = el('top10OrdersBody');
                     // Clear existing table rows
                     top10OrdersBody.innerHTML = '';
                     // Populate table with new data
@@ -999,8 +1003,8 @@
                     alert('Failed to load dashboard data. Please try again.');
                 })
                 .finally(() => {
-                    document.getElementById('rfs').style.display = 'block';
-                    document.getElementById('spn').style.display = 'none';
+                    el('rfs').style.display = 'block';
+                    el('spn').style.display = 'none';
                 });
         }
 
@@ -1018,11 +1022,12 @@
         //     clearInterval(intervalId);
         // });
 
-        document.getElementById('refresh').addEventListener('click', function () {
-            // Disable the button
-            // loadDashboardData();
-
-            this.disabled = true;
+        // Disable any refresh link after it is clicked (works for every link,
+        // and safely does nothing for roles where these links are not rendered)
+        document.querySelectorAll('.refresh-link').forEach(function (link) {
+            link.addEventListener('click', function () {
+                this.classList.add('disabled');
+            });
         });
 
         initialLoad();
