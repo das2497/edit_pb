@@ -1,25 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
+@extends('layouts.bakery')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Admin | Final Report</title>
-    <link rel="icon" href="{{ asset('assets/images/logo.png') }}">
+@section('title', 'Evening Final Report - Full Screen | Rep')
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="{{ asset('assets/vendor/bootstrap/css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/circular-std/style.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/libs/css/style.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/fontawesome/css/fontawesome-all.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/charts/chartist-bundle/chartist.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/charts/morris-bundle/morris.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/material-design-iconic-font/css/materialdesignicons.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/charts/c3charts/c3.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/flag-icon-css/flag-icon.min.css') }}">
-    <style>
+@push('styles')
+<style>
+
         .div {
-            height: 400px;
+            height: 600px;
             /* max-width: 100vw; */
             overflow-x: auto;
             overflow-y: auto;
@@ -28,7 +15,7 @@
         }
 
         .div2 {
-            height: 800px;
+            height: 600px;
             /* max-width: 100vw; */
             overflow-x: auto;
             overflow-y: auto;
@@ -59,15 +46,15 @@
         td {
             /* padding: 10px 100px; */
             text-transform: capitalize;
-            border: 1px solid black;
+            border: 1px solid var(--border);
             padding-inline: 20px;
-            color: black;
+            color: var(--text);
             /* min-width: 160px; */
         }
 
         th {
             /* background: white; */
-            color: black;
+            color: var(--text);
             white-space: nowrap;
 
             &:first-child,
@@ -78,8 +65,8 @@
                 position: sticky;
                 left: 0px;
                 z-index: 3;
-                background-color: #feebe9;
-                color: #000;
+                background-color: var(--surface-2);
+                color: var(--text);
             }
         }
 
@@ -93,30 +80,49 @@
                 position: sticky;
                 left: 0px;
                 z-index: 2;
-                background-color: #feebe9;
-                color: #000;
+                background-color: var(--surface-2);
+                color: var(--text);
             }
         }
-    </style>
-</head>
+    
+    /* bakery theme overrides */
+    #productsTable { color: var(--text); --bs-table-bg: transparent; }
+    #productsTable th, #productsTable td { color: var(--text); }
+    #productsTable .table-info { background: rgba(91,127,166,.22) !important; color: var(--text); }
+    #productsTable .table-warning { background: rgba(201,138,59,.32) !important; color: var(--text); }
+    #productsTable .table-secondary { background: var(--surface-2) !important; color: var(--text); }
+    #productsTable .table-success { background: rgba(76,124,107,.3) !important; color: var(--text); }
+    #productsTable .bg-light { background: var(--surface-2) !important; color: var(--text); }
 
-<body class="table-dark">
+</style>
+@endpush
 
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-12 p-2">
-                <div class="card p-2">
-                    <div class="row">
-                        <div class="col-4">
-                            <h5 class="card-header">Today Evening Final Report &nbsp;&nbsp;
-                            </h5>
-                        </div>
-                        <div class="col-2 offset-6">
-                            <a href="/rep/final-report-evening" class="btn btn-outline-dark">Go Back</a>
-                        </div>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="div">
+@section('content')
+
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-4">
+    <div>
+        <h1 class="display-font page-title mb-1">Evening Final Report - Full Screen</h1>
+        <div class="page-sub">Rep / Full Screen Final Report</div>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="/rep/final-report-evening" class="btn btn-soft btn-sm"><i class="bi bi-arrow-left me-1"></i> Back to Report</a>
+        <a href="/rep/final-report-evening-full-screen" class="btn btn-accent btn-sm d-none"></a>
+    </div>
+</div>
+
+@include('components.bakery.alerts')
+
+<div class="panel">
+    <div class="panel-head">
+        <div>
+            <h2>Evening Final Report - Full Screen</h2>
+            <div class="sub">Full screen view - scroll horizontally & vertically</div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/rep/final-report-evening" class="btn btn-soft btn-sm"><i class="bi bi-arrow-left me-1"></i> Back to Report</a>
+        </div>
+    </div>
+    <div class="div">
                             <table class="table-bordered border-dark">
                                 <thead class="bg-light">
                                     <tr>
@@ -226,39 +232,6 @@
                 </div>
             </div>
         </div>
-    </div>
-    <!-- /content -->
+</div>
 
-
-    <!-- jQuery 3.3.1 -->
-    <script src="{{ asset('assets/vendor/jquery/jquery-3.3.1.min.js') }}"></script>
-    <!-- Bootstrap bundle JS -->
-    <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.js') }}"></script>
-    <!-- SlimScroll JS -->
-    <script src="{{ asset('assets/vendor/slimscroll/jquery.slimscroll.js') }}"></script>
-    <!-- Main JS -->
-    <script src="{{ asset('assets/libs/js/main-js.js') }}"></script>
-    <!-- Chartist JS -->
-    <script src="{{ asset('assets/vendor/charts/chartist-bundle/chartist.min.js') }}"></script>
-    <!-- Sparkline JS -->
-    <script src="{{ asset('assets/vendor/charts/sparkline/jquery.sparkline.js') }}"></script>
-    <!-- Morris JS -->
-    <script src="{{ asset('assets/vendor/charts/morris-bundle/raphael.min.js') }}"></script>
-    <script src="{{ asset('assets/vendor/charts/morris-bundle/morris.js') }}"></script>
-    <!-- C3 Charts JS -->
-    <script src="{{ asset('assets/vendor/charts/c3charts/c3.min.js') }}"></script>
-    <script src="{{ asset('assets/vendor/charts/c3charts/d3-5.4.0.min.js') }}"></script>
-    <script src="{{ asset('assets/vendor/charts/c3charts/C3chartjs.js') }}"></script>
-    <!-- Dashboard E-commerce JS -->
-    <script src="{{ asset('assets/libs/js/dashboard-ecommerce.js') }}"></script>
-    <!-- Chart Bundle JS -->
-    <script src="{{ asset('assets/vendor/charts/charts-bundle/Chart.bundle.js') }}"></script>
-    <script src="{{ asset('assets/vendor/charts/charts-bundle/chartjs.js') }}"></script>
-    <script>
-        function confirmDelete() {
-            return confirm('Are you sure you want to delete this item?');
-        }
-    </script>
-</body>
-
-</html>
+@endsection

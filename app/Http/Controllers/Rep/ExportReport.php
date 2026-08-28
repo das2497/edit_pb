@@ -122,7 +122,7 @@ class ExportReport extends Controller
             return false;
         })->values();        
 
-        return view('order-admin.export-report', [
+        return view('rep.export-report', [
             'shops'            => $filteredShops,
             'products'         => $filteredProducts,
             'aggregatedOrders' => $aggregatedOrders,
@@ -130,7 +130,7 @@ class ExportReport extends Controller
             'state'            => $state,
             'routes'           => $routes,
             'categories'       => $categories,
-            'selectedCategories' => $selectedCategories, // pass back so Blade can pre-select
+            'selectedCategories' => $selectedCategories,
             'currentDate'      => $currentDate,
             'timePeriod'       => $timePeriod,
             'fromDate'         => $fromDate,
