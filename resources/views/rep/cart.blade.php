@@ -1,238 +1,136 @@
-<!DOCTYPE html>
-<html lang="en">
+@extends('layouts.bakery')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Admin | Cart</title>
-    <link rel="icon" href="{{ asset('assets/images/logo.png') }}">
+@section('title', 'Rep | Cart')
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="{{ asset('assets/vendor/bootstrap/css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/circular-std/style.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/libs/css/style.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/fontawesome/css/fontawesome-all.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/charts/chartist-bundle/chartist.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/charts/morris-bundle/morris.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/material-design-iconic-font/css/materialdesignicons.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/charts/c3charts/c3.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/flag-icon-css/flag-icon.min.css') }}">
+@section('content')
 
-</head>
-
-<body>
-
-    <!-- header  -->
-    @include('rep.components.header')
-    <!-- /header  -->
-
-    <!-- menu -->
-    @include('rep.components.menu')
-    <!-- /menu -->
-
-    <!-- content -->
-    <div class="dashboard-wrapper">
-        <div class="dashboard-ecommerce">
-            <div class="container-fluid dashboard-content ">
-                <!-- ============================================================== -->
-                <!-- pageheader  -->
-                <!-- ============================================================== -->
-                <div class="row">
-                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                        <div class="page-header">
-                            <h2 class="pageheader-title"> Cart </h2>
-                            <div class="page-breadcrumb">
-                                <nav aria-label="breadcrumb">
-                                    <ol class="breadcrumb">
-                                        <li class="breadcrumb-item"><a href="/rep/dashboard" class="breadcrumb-link">Dashboard</a></li>
-                                        <li class="breadcrumb-item"><a href="/rep/create-order?shop={{session('selected_shop')}}" class="breadcrumb-link">Create Order</a></li>
-                                        <li class="breadcrumb-item active" aria-current="page">Cart</li>
-                                    </ol>
-                                </nav>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- ============================================================== -->
-                <!-- end pageheader  -->
-                <!-- ============================================================== -->
-                <div class="ecommerce-widget">
-
-                    <div class="row">
-                        <!-- ============================================================== -->
-
-                        <!-- ============================================================== -->
-
-                        <!-- recent orders  -->
-                        <!-- ============================================================== -->
-
-                        <div class="col-12 col-md-12">
-                            <div class="card">
-                                @if ($errors->any())
-                                <div class="alert alert-danger">
-                                    <ul>
-                                        @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                                @endif
-                                @if (session('success'))
-                                <div class="alert alert-success">
-                                    {{ session('success') }}
-                                </div>
-                                @endif
-                                @if (session('error'))
-                                <div class="alert alert-danger">
-                                    {{ session('error') }}
-                                </div>
-                                @endif
-                                <h5 class="card-header">{{$shop->name}}'s Cart
-                                    <a href="/rep/clear-cart?shop={{$branch_code}}" onclick="return confirmClear();" class="btn btn-outline-danger mx-2">Clear cart</a>
-                                    <a href="/rep/create-order?shop={{$branch_code}}" class="btn btn-outline-danger float-right">Go Back</a>
-                                </h5>
-                                <div class="card-body p-0">
-                                    <div class="table-responsive">
-                                        <table class="table">
-                                            <thead class="bg-light">
-                                                <tr class="border-0">
-                                                    <th class="border-0">#</th>
-                                                    <th class="border-0">Item image</th>
-                                                    <th class="border-0">Item Id</th>
-                                                    <th class="border-0">Item Name English</th>
-                                                    <th class="border-0">Price Range</th>
-                                                    <th class="border-0">Price</th>
-                                                    <th class="border-0">Quantity</th>
-                                                    <th class="border-0">Remarke</th>
-                                                    <th class="border-0">Total</th>
-                                                    <th class="border-0">Update</th>
-                                                    <th class="border-0">Delete</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @php
-                                                $total=0;
-                                                @endphp
-                                                @foreach ($carts as $cart)
-                                                <tr>
-                                                    <td>{{$loop->iteration}}</td>
-                                                    <td><img src="{{asset('assets/images/item-images/'.$cart->img)}}" class="img-thumbnail" alt="product image" style="height: 80px; width: 80px;"></td>
-                                                    <td>{{$cart->item_number}}</td>
-                                                    <td>{{$cart->name_english}}</td>
-                                                    <td>{{$cart->price_range}}</td>
-                                                    <td>රු. {{number_format($cart->price,2)}}</td>
-                                                    <form action="/rep/cart/update-qty" method="POST">
-                                                        @csrf
-                                                        <td><input type="number" name="qty" class="form-control" value="{{$cart->qty}}"></td>
-                                                        <td><input type="text" name="remarke" class="form-control" value="{{$cart->remarke}}"></td>
-                                                        <td>රු. {{number_format($cart->price*$cart->qty,2)}}</td>
-                                                        <input type="hidden" name="item_number" value="{{$cart->item_number}}" />
-                                                        <input type="hidden" name="branch_code" value="{{$cart->shop_bc_number}}">
-                                                        <td><button type="submit" class="btn btn-outline-primary">Update</button></td>
-                                                        <td><button type="submit" formaction="/rep/cart/delete-item" onclick="return confirmDelete();" class="btn btn-outline-danger">Delete</button></td>
-                                                    </form>
-                                                </tr>
-                                                @php
-                                                $total+=$cart->price*$cart->qty;
-                                                @endphp
-                                                @endforeach
-                                                <tr>
-                                                    <td colspan="6"></td>
-                                                    <th class="text-right">Total Price : </th>
-                                                    <th colspan="3">රු. {{number_format($total,2)}}</th>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-body p-1">
-                                    <form action="/rep/cart/order-process" method="POST" class="row">
-                                        @csrf
-                                        <div class="col-12 col-md-6 m-b-10">
-                                            <label for="order_note">Special Note</label>
-                                            <textarea class="form-control" name="note" cols="30" rows="4"></textarea>
-                                        </div>
-                                        @if ($shop->order_time == 'Both')
-                                        <div class="col-12 col-md-6 m-b-10">
-                                            <label for="order_note">Order Time</label>
-                                            <select class="form-control" name="order_time">
-                                                <option value="">Select Time</option>
-                                                <option value="Morning">Morning</option>
-                                                <option value="Evening">Evining</option>
-                                            </select>
-                                        </div>
-                                        @elseif($shop->order_time == 'Morning')
-                                        <input type="hidden" name="order_time" value="Morning">
-                                        @elseif($shop->order_time == 'Evening')
-                                        <input type="hidden" name="order_time" value="Evening">
-                                        @endif
-                                        <div class="col-12 col-md-6 offset-md-3 m-b-10">
-                                            <input type="hidden" name="total" value="{{$total}}">
-                                            <input type="hidden" name="shop" value="{{$shop->branch_code}}">
-                                            <button id="proceedbtn" type="submit" class="btn btn-outline-success px-4 w-100">Proceed</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- ============================================================== -->
-                        <!-- end recent orders  -->
-
-                    </div>
-
-                </div>
-            </div>
-        </div>
-
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-4">
+    <div>
+        <h1 class="display-font page-title mb-1">{{ $shop->name }}'s Cart</h1>
+        <div class="page-sub">Dashboard / Create Order / Cart — <span class="mono">{{ $branch_code ?? session('selected_shop') }}</span></div>
     </div>
-    <!-- /content -->
+    <div class="d-flex gap-2">
+        <a href="/rep/clear-cart?shop={{ $branch_code }}" onclick="return confirmClear();" class="btn btn-soft btn-sm" style="color:var(--accent);">Clear cart</a>
+        <a href="/rep/create-order?shop={{ $branch_code }}" class="btn btn-soft">Go Back</a>
+    </div>
+</div>
 
+@include('components.bakery.alerts')
 
-    <!-- jQuery 3.3.1 -->
-    <script src="{{ asset('assets/vendor/jquery/jquery-3.3.1.min.js') }}"></script>
-    <!-- Bootstrap bundle JS -->
-    <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.js') }}"></script>
-    <!-- SlimScroll JS -->
-    <script src="{{ asset('assets/vendor/slimscroll/jquery.slimscroll.js') }}"></script>
-    <!-- Main JS -->
-    <script src="{{ asset('assets/libs/js/main-js.js') }}"></script>
-    <!-- Chartist JS -->
-    <script src="{{ asset('assets/vendor/charts/chartist-bundle/chartist.min.js') }}"></script>
-    <!-- Sparkline JS -->
-    <script src="{{ asset('assets/vendor/charts/sparkline/jquery.sparkline.js') }}"></script>
-    <!-- Morris JS -->
-    <script src="{{ asset('assets/vendor/charts/morris-bundle/raphael.min.js') }}"></script>
-    <script src="{{ asset('assets/vendor/charts/morris-bundle/morris.js') }}"></script>
-    <!-- C3 Charts JS -->
-    <script src="{{ asset('assets/vendor/charts/c3charts/c3.min.js') }}"></script>
-    <script src="{{ asset('assets/vendor/charts/c3charts/d3-5.4.0.min.js') }}"></script>
-    <script src="{{ asset('assets/vendor/charts/c3charts/C3chartjs.js') }}"></script>
-    <!-- Dashboard E-commerce JS -->
-    <script src="{{ asset('assets/libs/js/dashboard-ecommerce.js') }}"></script>
-    <!-- Chart Bundle JS -->
-    <script src="{{ asset('assets/vendor/charts/charts-bundle/Chart.bundle.js') }}"></script>
-    <script src="{{ asset('assets/vendor/charts/charts-bundle/chartjs.js') }}"></script>
-    <script>
-        function confirmDelete() {
-            return confirm('Are you sure you want to delete this item?');
-        }
+<div class="panel mb-4">
+    <div class="panel-head">
+        <div>
+            <h2>Cart Items</h2>
+            <div class="sub">{{ count($carts) }} item(s)</div>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-bakery align-middle">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Image</th>
+                    <th>Item Id</th>
+                    <th>Item Name</th>
+                    <th>Price Range</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Remark</th>
+                    <th>Total</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @php $total = 0; @endphp
+                @foreach ($carts as $cart)
+                @php $fid = 'cart-'.$loop->iteration; @endphp
+                <tr>
+                    <td>{{ $loop->iteration }}</td>
+                    <td><img class="img-thumb" src="{{ asset('assets/images/item-images/'.$cart->img) }}" alt=""></td>
+                    <td class="mono">{{ $cart->item_number }}</td>
+                    <td>{{ $cart->name_english }}</td>
+                    <td>{{ $cart->price_range }}</td>
+                    <td class="mono">රු. {{ number_format($cart->price, 2) }}</td>
+                    <td><input type="number" name="qty" class="form-control form-control-sm" value="{{ $cart->qty }}" form="{{ $fid }}" style="min-width:100px;"></td>
+                    <td><input type="text" name="remarke" class="form-control form-control-sm" value="{{ $cart->remarke }}" form="{{ $fid }}" style="min-width:120px;"></td>
+                    <td class="mono">රු. {{ number_format($cart->price * $cart->qty, 2) }}</td>
+                    <td>
+                        <form action="/rep/cart/update-qty" method="POST" id="{{ $fid }}">
+                            @csrf
+                            <input type="hidden" name="item_number" value="{{ $cart->item_number }}">
+                            <input type="hidden" name="branch_code" value="{{ $cart->shop_bc_number }}">
+                            <button type="submit" class="btn btn-soft btn-sm">Update</button>
+                        </form>
+                    </td>
+                    <td><button type="submit" form="{{ $fid }}" formaction="/rep/cart/delete-item" onclick="return confirmDelete();" class="btn btn-soft btn-sm" style="color:var(--accent);">Delete</button></td>
+                </tr>
+                @php $total += $cart->price * $cart->qty; @endphp
+                @endforeach
+                <tr>
+                    <th colspan="8" class="text-end">Total Price :</th>
+                    <th class="mono">රු. {{ number_format($total, 2) }}</th>
+                    <th colspan="2"></th>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 
-        function confirmClear() {
-            return confirm('Are you sure you want to clear the cart?');
-        }
+<div class="panel">
+    <div class="panel-head">
+        <div>
+            <h2>Place Order</h2>
+            <div class="sub">Add a note and confirm</div>
+        </div>
+    </div>
+    <form action="/rep/cart/order-process" method="POST" class="row g-3">
+        @csrf
+        <div class="col-12 col-md-6">
+            <label for="order_note" class="form-label">Special Note</label>
+            <textarea class="form-control" id="order_note" name="note" rows="4"></textarea>
+        </div>
+        @if ($shop->order_time == 'Both')
+        <div class="col-12 col-md-6">
+            <label for="order_time" class="form-label">Order Time</label>
+            <select class="form-select" id="order_time" name="order_time">
+                <option value="">Select Time</option>
+                <option value="Morning">Morning</option>
+                <option value="Evening">Evening</option>
+            </select>
+        </div>
+        @elseif ($shop->order_time == 'Morning')
+        <input type="hidden" name="order_time" value="Morning">
+        @elseif ($shop->order_time == 'Evening')
+        <input type="hidden" name="order_time" value="Evening">
+        @endif
+        <div class="col-12 col-md-6 offset-md-3">
+            <input type="hidden" name="total" value="{{ $total }}">
+            <input type="hidden" name="shop" value="{{ $shop->branch_code }}">
+            <button class="btn btn-accent w-100" id="proceedbtn">Proceed</button>
+        </div>
+    </form>
+</div>
 
-        document.getElementById('proceedbtn').addEventListener('', function() {
-            if (document.querySelector('select[name="order_time"]').value == '') {
+@endsection
+
+@push('scripts')
+<script>
+    function confirmDelete() {
+        return confirm('Are you sure you want to delete this item?');
+    }
+    function confirmClear() {
+        return confirm('Are you sure you want to clear the cart?');
+    }
+    const proceed = document.getElementById('proceedbtn');
+    if (proceed) {
+        proceed.addEventListener('click', function(e) {
+            const sel = document.querySelector('select[name="order_time"]');
+            if (sel && sel.value == '') {
                 alert('Please select the order time');
-                event.preventDefault();
+                e.preventDefault();
             }
         });
-    </script>
-</body>
-
-</html>
+    }
+</script>
+@endpush
