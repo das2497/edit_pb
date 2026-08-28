@@ -314,10 +314,9 @@
 
                     <form action="{{ route('login') }}" method="POST" id="loginForm">
                         @csrf
-
                         <div class="input-group-card">
                             <div class="field">
-                                <label for="email">Username</label>
+                                <label for="email">Email</label>
                                 <input type="email" id="email" name="email" placeholder="your-email@gmail.com"
                                     value="{{ old('email') }}" autocomplete="off" required autofocus>
                             </div>
