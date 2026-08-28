@@ -256,3 +256,10 @@ a{text-decoration:none;}
 .table-bakery tr.pb-premium > td{background:rgba(178,58,72,.14);}
 .table-bakery tr.in-cart > td{background:rgba(76,124,107,.14);}
 .legend-dot{display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:5px; vertical-align:middle;}
+
+/* ===== Modals & status row tints (Phase 3B additions) ===== */
+.modal-content{background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:16px;}
+.modal-header, .modal-footer{border-color:var(--border);}
+[data-theme="dark"] .btn-close{filter:invert(1);}
+.table-bakery tr.row-good > td{background:rgba(76,124,107,.16);}
+.table-bakery tr.row-warn > td{background:rgba(201,138,59,.18);}
