@@ -41,6 +41,8 @@
         {{-- Role-aware sidebar --}}
         @if (Auth::user()->role === 'rep')
             @include('components.bakery.sidebar-rep')
+        @elseif (Auth::user()->role === 'shop')
+            @include('components.bakery.sidebar-shop')
         @elseif (Auth::user()->role === 'sales_admin')
             @include('components.bakery.sidebar-sales-admin')
         @else

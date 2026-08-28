@@ -1,440 +1,259 @@
-<!DOCTYPE html>
-<html lang="en">
+@extends('layouts.bakery')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shop</title>
-    <link rel="icon" href="{{ asset('assets/images/logo.png') }}">
+@section('title', 'Shop | Dashboard')
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="{{ asset('assets/vendor/bootstrap/css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/circular-std/style.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/libs/css/style.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/fontawesome/css/fontawesome-all.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/charts/chartist-bundle/chartist.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/charts/morris-bundle/morris.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/material-design-iconic-font/css/materialdesignicons.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/charts/c3charts/c3.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/flag-icon-css/flag-icon.min.css') }}">
+@section('content')
 
-</head>
+    <div class="d-flex flex-wrap justify-content-between align-items-end mb-4 gap-2">
+        <div>
+            <h1 class="display-font page-title mb-1">{{ Auth::user()->name }} Dashboard 🥐</h1>
+            <div class="page-sub">Shop overview — {{ now()->format('l, d F Y') }}</div>
+        </div>
+    </div>
 
-<body>
+    @include('components.bakery.alerts')
 
-    <!-- header  -->
-    @include('shop.components.header')
-    <!-- /header  -->
-
-    <!-- menu -->
-    @include('shop.components.menu')
-    <!-- /menu -->
-
-    <!-- content -->
-    <div class="dashboard-wrapper">
-        <div class="dashboard-ecommerce">
-            <div class="container-fluid dashboard-content ">
-                <!-- ============================================================== -->
-                <!-- pageheader  -->
-                <!-- ============================================================== -->
-                <div class="row">
-                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                        <div class="page-header">
-                            <h2 class="pageheader-title"> {{Auth::user()->name}} Dashboard </h2>
-                            <div class="page-breadcrumb">
-                                <nav aria-label="breadcrumb">
-                                    <ol class="breadcrumb">
-                                        <li class="breadcrumb-item"><a href="#" class="breadcrumb-link">Dashboard</a></li>
-                                    </ol>
-                                </nav>
-                            </div>
-                        </div>
-                    </div>
+    {{-- KPI counts --}}
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="kpi-card">
+                <div class="kpi-top">
+                    <div class="kpi-icon bg-tint-caramel"><i class="bi bi-hourglass-split"></i></div>
+                    <span class="status-pill status-pending">Pending</span>
                 </div>
-                <!-- ============================================================== -->
-                <!-- end pageheader  -->
-                <!-- ============================================================== -->
-                <div class="ecommerce-widget">
+                <div class="kpi-label">Pending Orders</div>
+                <div class="kpi-value">{{ $pending_orders_count }}</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="kpi-card">
+                <div class="kpi-top">
+                    <div class="kpi-icon bg-tint-blueberry"><i class="bi bi-arrow-repeat"></i></div>
+                    <span class="status-pill status-baking">Processing</span>
+                </div>
+                <div class="kpi-label">Processing Orders</div>
+                <div class="kpi-value">{{ $processing_orders_count }}</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="kpi-card">
+                <div class="kpi-top">
+                    <div class="kpi-icon bg-tint-mint"><i class="bi bi-check2-circle"></i></div>
+                    <span class="status-pill status-ready">Complete</span>
+                </div>
+                <div class="kpi-label">Completed Orders</div>
+                <div class="kpi-value">{{ $complete_orders_count }}</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="kpi-card">
+                <div class="kpi-top">
+                    <div class="kpi-icon bg-tint-accent"><i class="bi bi-search"></i></div>
+                    <span class="status-pill status-late">Review</span>
+                </div>
+                <div class="kpi-label">Under Review Orders</div>
+                <div class="kpi-value">{{ $under_review_orders_count }}</div>
+            </div>
+        </div>
+    </div>
 
-                    <div class="row">
-                        <!-- ============================================================== -->
-                        <!-- sales  -->
-                        <!-- ============================================================== -->
-                        <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12 col-12">
-                            <div class="card border-3 border-top border-top-primary">
-                                <div class="card-body">
-                                    <h5 class="text-muted">Pending Orders Count</h5>
-                                    <div class="metric-value d-inline-block">
-                                        <h1 class="mb-1">
-                                            {{$pending_orders_count}}
-                                        </h1>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- ============================================================== -->
-                        <!-- end sales  -->
-                        <!-- ============================================================== -->
-                        <!-- ============================================================== -->
-                        <!-- new customer  -->
-                        <!-- ============================================================== -->
-                        <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12 col-12">
-                            <div class="card border-3 border-top border-top-primary">
-                                <div class="card-body">
-                                    <h5 class="text-muted">Processing Orders Count</h5>
-                                    <div class="metric-value d-inline-block">
-                                        <h1 class="mb-1">
-                                            {{$processing_orders_count}}
-                                        </h1>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- ============================================================== -->
-                        <!-- end new customer  -->
-                        <!-- ============================================================== -->
-                        <!-- ============================================================== -->
-                        <!-- visitor  -->
-                        <!-- ============================================================== -->
-                        <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12 col-12">
-                            <div class="card border-3 border-top border-top-primary">
-                                <div class="card-body">
-                                    <h5 class="text-muted">Total Completed Orders Count</h5>
-                                    <div class="metric-value d-inline-block">
-                                        <h1 class="mb-1">
-                                            {{$complete_orders_count}}
-                                        </h1>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- ============================================================== -->
-                        <!-- end visitor  -->
-                        <!-- ============================================================== -->
-                        <!-- ============================================================== -->
-                        <!-- total orders  -->
-                        <!-- ============================================================== -->
-                        <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12 col-12">
-                            <div class="card border-3 border-top border-top-primary">
-                                <div class="card-body">
-                                    <h5 class="text-muted">Under Review Orders Count</h5>
-                                    <div class="metric-value d-inline-block">
-                                        <h1 class="mb-1">
-                                            {{$under_review_orders_count}}
-                                        </h1>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- ============================================================== -->
-                        <!-- end total orders  -->
-                        <!-- ============================================================== -->
-                    </div>
+    {{-- Revenue --}}
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+            <div class="kpi-card">
+                <div class="kpi-top"><div class="kpi-icon bg-tint-mint"><i class="bi bi-currency-rupee"></i></div></div>
+                <div class="kpi-label">Today Estimated Revenue</div>
+                <div class="kpi-value mono" style="font-size:1.55rem;">රු. {{ number_format($today_total_revenue, 2) }}</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="kpi-card">
+                <div class="kpi-top"><div class="kpi-icon bg-tint-caramel"><i class="bi bi-calendar-week"></i></div></div>
+                <div class="kpi-label">This Week Revenue
+                    <small class="d-block text-muted" style="text-transform:none; letter-spacing:0; font-size:.72rem;">{{ \Carbon\Carbon::parse($startOfThisWeek)->format('Y-m-d') }} to {{ \Carbon\Carbon::parse($endOfThisWeek)->format('Y-m-d') }}</small>
+                </div>
+                <div class="kpi-value mono" style="font-size:1.55rem;">රු. {{ number_format($thisWeek_total_revenue, 2) }}</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="kpi-card">
+                <div class="kpi-top"><div class="kpi-icon bg-tint-blueberry"><i class="bi bi-calendar-month"></i></div></div>
+                <div class="kpi-label">This Month Revenue
+                    <small class="d-block text-muted" style="text-transform:none; letter-spacing:0; font-size:.72rem;">{{ \Carbon\Carbon::parse($startOfThisMonth)->format('Y-m-d') }} to {{ \Carbon\Carbon::parse($endOfThisMonth)->format('Y-m-d') }}</small>
+                </div>
+                <div class="kpi-value mono" style="font-size:1.55rem;">රු. {{ number_format($lastMonth_total_revenue, 2) }}</div>
+            </div>
+        </div>
+    </div>
 
-                    <div class="row">
-                        <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 col-12">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="text-muted">Today my estimated Total Revenue</h5>
-                                    <div class="metric-value d-inline-block">
-                                        <h1 class="mb-1">රු.
-                                            {{number_format($today_total_revenue,2)}}
-                                        </h1>
-                                    </div>
-                                    <div class="metric-label d-inline-block float-right font-weight-bold">
+    {{-- Charts --}}
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-6">
+            <div class="panel h-100">
+                <div class="panel-head">
+                    <div><h2>Last 12 Months Revenue</h2><div class="sub">Monthly totals</div></div>
+                </div>
+                <canvas id="barChart"></canvas>
+            </div>
+        </div>
+        <div class="col-12 col-md-6">
+            <div class="panel h-100">
+                <div class="panel-head">
+                    <div><h2>Last 30 Days Revenue</h2><div class="sub">Daily totals</div></div>
+                </div>
+                <canvas id="past30DaysRevenueChart"></canvas>
+            </div>
+        </div>
+        <div class="col-12 col-md-6">
+            <div class="panel h-100">
+                <div class="panel-head">
+                    <div><h2>Best Selling Categories</h2><div class="sub">By quantity</div></div>
+                </div>
+                <canvas id="bestSellingProductCategories"></canvas>
+            </div>
+        </div>
+        <div class="col-12 col-md-6">
+            <div class="panel h-100">
+                <div class="panel-head">
+                    <div><h2>Best Selling Products</h2><div class="sub">Top 10 by quantity</div></div>
+                </div>
+                <canvas id="bestSellingProducts"></canvas>
+            </div>
+        </div>
+    </div>
 
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 col-12">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="text-muted">This week estimated Total Revenue <small> ({{date('Y-m-d', strtotime($startOfThisWeek))}} to {{date('Y-m-d', strtotime($endOfThisWeek))}})</small></h5>
-                                    <div class="metric-value d-inline-block">
-                                        <h1 class="mb-1">රු.
-                                            {{number_format($thisWeek_total_revenue,2)}}
-                                        </h1>
-                                    </div>
-                                    <div class="metric-label d-inline-block float-right text-success font-weight-bold">
-
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 col-12">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="text-muted">This Month estimated Total Revenue <small> ({{date('Y-m-d', strtotime($startOfThisMonth))}} to {{date('Y-m-d', strtotime($endOfThisMonth))}})</small></h5>
-                                    <div class="metric-value d-inline-block">
-                                        <h1 class="mb-1">රු.
-                                            {{number_format($lastMonth_total_revenue,2)}}
-                                        </h1>
-                                    </div>
-                                    <div class="metric-label d-inline-block float-right text-primary font-weight-bold">
-
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-12 col-md-6">
-                            <div class="card">
-                                <h2 class="card-header">Last 12 Months Revenue</h2>
-                                <div class="card-body">
-                                    <canvas id="barChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-12 col-md-6">
-                            <div class="card">
-                                <h2 class="card-header">Last 30 Days Revenue</h2>
-                                <div class="card-body">
-                                    <canvas id="past30DaysRevenueChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-12 col-md-6">
-                            <div class="card">
-                                <h2 class="card-header">My Best Selling Product Categories</h2>
-                                <div class="card-body">
-                                    <canvas id="bestSellingProductCategories"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-12 col-md-6">
-                            <div class="card">
-                                <h2 class="card-header">My Best Selling Products</h2>
-                                <div class="card-body">
-                                    <canvas id="bestSellingProducts"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12">
-                            <div class="card">
-                                <h5 class="card-header">Resent Orders</h5>
-                                <div class="card-body">
-                                    <div class="table-responsive ">
-                                        <table class="table">
-                                            <thead class="bg-light">
-                                                <tr class="border-0">
-                                                    <th class="border-0">#</th>
-                                                    <th class="border-0">Order Id</th>
-                                                    <th class="border-0">Delivery time</th>
-                                                    <th class="border-0">Order create time</th>
-                                                    <th class="border-0">Estimate&nbsp;full&nbsp;amount</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach ($latest_orders as $latest_order)
-                                                <tr>
-                                                    <td>{{$loop->iteration}}</td>
-                                                    <td>{{$latest_order->unique_id}}</td>
-                                                    <td>{{$latest_order->time_period}}</td>
-                                                    <td>{{$latest_order->order_date}}</td>
-                                                    <td>රු. {{$latest_order->total_price}}</td>
-                                                </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12">
-                            <div class="card">
-                                <h5 class="card-header">Last 30 Days Top 10 Orders</h5>
-                                <div class="card-body">
-                                    <div class="table-responsive ">
-                                        <table class="table">
-                                            <thead class="bg-light">
-                                                <tr class="border-0">
-                                                    <th class="border-0">#</th>
-                                                    <th class="border-0">Order Id</th>
-                                                    <th class="border-0">Delivery time</th>
-                                                    <th class="border-0">Order create time</th>
-                                                    <th class="border-0">Estimate&nbsp;full&nbsp;amount</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach ($top_orders as $top_order)
-                                                <tr>
-                                                    <td>{{$loop->iteration}}</td>
-                                                    <td>{{$top_order->unique_id}}</td>
-                                                    <td>{{$top_order->time_period}}</td>
-                                                    <td>{{$top_order->order_date}}</td>
-                                                    <td>රු. {{$top_order->total_price}}</td>
-                                                </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
+    {{-- Orders tables --}}
+    <div class="row g-3">
+        <div class="col-12 col-xl-6">
+            <div class="panel h-100">
+                <div class="panel-head"><div><h2>Recent Orders</h2><div class="sub">Latest 10</div></div></div>
+                <div class="table-responsive">
+                    <table class="table table-bakery">
+                        <thead><tr><th>#</th><th>Order Id</th><th>Delivery</th><th>Created</th><th class="text-end">Amount</th></tr></thead>
+                        <tbody>
+                            @forelse ($latest_orders as $o)
+                                <tr>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td class="mono">{{ $o->unique_id }}</td>
+                                    <td><span class="status-pill status-pending">{{ $o->time_period }}</span></td>
+                                    <td class="mono" style="font-size:.8rem;">{{ $o->order_date }}</td>
+                                    <td class="mono text-end">රු. {{ number_format($o->total_price, 2) }}</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="5" class="text-center text-muted">No orders</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-        <!-- ============================================================== -->
-        <!-- end footer -->
-        <!-- ============================================================== -->
+        <div class="col-12 col-xl-6">
+            <div class="panel h-100">
+                <div class="panel-head"><div><h2>Top Orders (30 days)</h2><div class="sub">Highest value</div></div></div>
+                <div class="table-responsive">
+                    <table class="table table-bakery">
+                        <thead><tr><th>#</th><th>Order Id</th><th>Delivery</th><th>Created</th><th class="text-end">Amount</th></tr></thead>
+                        <tbody>
+                            @forelse ($top_orders as $o)
+                                <tr>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td class="mono">{{ $o->unique_id }}</td>
+                                    <td><span class="status-pill status-baking">{{ $o->time_period }}</span></td>
+                                    <td class="mono" style="font-size:.8rem;">{{ $o->order_date }}</td>
+                                    <td class="mono text-end">රු. {{ number_format($o->total_price, 2) }}</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="5" class="text-center text-muted">No orders</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- jQuery 3.3.1 -->
-    <script src="{{ asset('assets/vendor/jquery/jquery-3.3.1.min.js') }}"></script>
-    <!-- Bootstrap bundle JS -->
-    <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.js') }}"></script>
-    <!-- SlimScroll JS -->
-    <script src="{{ asset('assets/vendor/slimscroll/jquery.slimscroll.js') }}"></script>
-    <!-- Main JS -->
-    <script src="{{ asset('assets/libs/js/main-js.js') }}"></script>
-    <!-- Chartist JS -->
-    <script src="{{ asset('assets/vendor/charts/chartist-bundle/chartist.min.js') }}"></script>
-    <!-- Sparkline JS -->
-    <script src="{{ asset('assets/vendor/charts/sparkline/jquery.sparkline.js') }}"></script>
-    <!-- Morris JS -->
-    <script src="{{ asset('assets/vendor/charts/morris-bundle/raphael.min.js') }}"></script>
-    <script src="{{ asset('assets/vendor/charts/morris-bundle/morris.js') }}"></script>
-    <!-- C3 Charts JS -->
-    <script src="{{ asset('assets/vendor/charts/c3charts/c3.min.js') }}"></script>
-    <script src="{{ asset('assets/vendor/charts/c3charts/d3-5.4.0.min.js') }}"></script>
-    <script src="{{ asset('assets/vendor/charts/c3charts/C3chartjs.js') }}"></script>
-    <!-- Dashboard E-commerce JS -->
-    <script src="{{ asset('assets/libs/js/dashboard-ecommerce.js') }}"></script>
-    <!-- Chart Bundle JS -->
-    <script src="{{ asset('assets/vendor/charts/charts-bundle/Chart.bundle.js') }}"></script>
-    <script src="{{ asset('assets/vendor/charts/charts-bundle/chartjs.js') }}"></script>
+@endsection
 
+@push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <script>
-        // Data from the backend
-        const months = {!! json_encode($last12montsrevenue -> pluck('month')) !!};
-        const amounts = {!!json_encode($last12montsrevenue -> pluck('amount')) !!};
+        document.addEventListener('DOMContentLoaded', function () {
+            const c = window.pbChartColors ? window.pbChartColors() : { accent: '#B23A48', caramel: '#C98A3B', mint: '#4C7C6B', blueberry: '#5B7FA6', grid: '#E7D9C2', text: '#8A7660' };
+            const pieColors = ['#B23A48', '#C98A3B', '#4C7C6B', '#5B7FA6', '#8A5A83', '#D97B4F', '#6FAF9B', '#84AAD6', '#C9AF95', '#E0576A'];
 
-        // Bar Chart
-        const barCtx = document.getElementById('barChart').getContext('2d');
-        new Chart(barCtx, {
-            type: 'bar',
-            data: {
-                labels: months,
-                datasets: [{
-                    label: 'Orders Amount (Rs)',
-                    data: amounts,
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
+            function barOpts() {
+                return {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: c.text, font: { family: 'Inter' } } },
+                        y: { beginAtZero: true, grid: { color: c.grid }, ticks: { color: c.text, font: { family: 'Inter' }, callback: v => 'Rs ' + Number(v).toLocaleString() } }
                     }
-                }
+                };
             }
-        });
 
-        // Data from the backend
-        const dates = {!! json_encode($last30DaysRevenue->pluck('date')) !!};
-        const amounts30 = {!! json_encode($last30DaysRevenue->pluck('amount')) !!};
+            // 12 months - shop uses year/month fields
+            try {
+                const raw12 = @json($last12montsrevenue);
+                const labels12 = raw12.map(r => {
+                    const m = String(r.month).padStart(2,'0');
+                    return `${r.year}-${m}`;
+                });
+                const data12 = raw12.map(r => parseFloat(r.amount));
+                const ctx = document.getElementById('barChart');
+                if (ctx) new Chart(ctx.getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: labels12, datasets: [{ label: 'Revenue', data: data12, backgroundColor: c.accent, borderRadius: 6, maxBarThickness: 34 }] },
+                    options: barOpts()
+                });
+            } catch (e) { console.error('12m', e); }
 
-        // Bar Chart
-        const barCtx30 = document.getElementById('past30DaysRevenueChart').getContext('2d');
-        new Chart(barCtx30, {
-            type: 'bar',
-            data: {
-                labels: dates,
-                datasets: [{
-                    label: 'Revenue (Rs)',
-                    data: amounts30,
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
+            // 30 days
+            try {
+                const raw30 = @json($last30DaysRevenue);
+                const labels30 = raw30.map(r => r.date);
+                const data30 = raw30.map(r => parseFloat(r.amount));
+                const ctx2 = document.getElementById('past30DaysRevenueChart');
+                if (ctx2) new Chart(ctx2.getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: labels30, datasets: [{ label: 'Revenue', data: data30, backgroundColor: c.caramel, borderRadius: 6, maxBarThickness: 20 }] },
+                    options: barOpts()
+                });
+            } catch (e) { console.error('30d', e); }
+
+            // Best selling categories - pie
+            try {
+                const cats = @json($bestSellingCategories);
+                const catLabels = cats.map(c => c.category);
+                const catData = cats.map(c => parseFloat(c.total_quantity_sold));
+                const ctxC = document.getElementById('bestSellingProductCategories');
+                if (ctxC) new Chart(ctxC.getContext('2d'), {
+                    type: 'pie',
+                    data: { labels: catLabels, datasets: [{ data: catData, backgroundColor: pieColors }] },
+                    options: { responsive: true, plugins: { legend: { position: 'top', labels: { color: c.text, font: { family: 'Inter' } } } } }
+                });
+            } catch (e) { console.error('cats', e); }
+
+            // Best selling products - bar
+            try {
+                const prods = @json($topSellingProducts);
+                const prodLabels = prods.map(p => p.name_english || p.item_number);
+                const prodData = prods.map(p => parseFloat(p.total_quantity_sold));
+                const ctxP = document.getElementById('bestSellingProducts');
+                if (ctxP) new Chart(ctxP.getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: prodLabels, datasets: [{ label: 'Qty Sold', data: prodData, backgroundColor: c.mint, borderRadius: 6 }] },
+                    options: {
+                        responsive: true,
+                        indexAxis: 'y',
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { beginAtZero: true, grid: { color: c.grid }, ticks: { color: c.text } },
+                            y: { grid: { display: false }, ticks: { color: c.text, font: { family: 'Inter', size: 11 } } }
+                        }
                     }
-                }
-            }
-        });
-
-        // Extract data from PHP to JavaScript
-        const shops = {!!json_encode($bestSellingCategories -> pluck('category')) !!};
-        const totalSales = {!!json_encode($bestSellingCategories -> pluck('total_quantity_sold')) !!};
-
-        // Create the pie chart
-        const ctx = document.getElementById('bestSellingProductCategories').getContext('2d');
-        new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: shops,
-                datasets: [{
-                    label: 'Total Sales',
-                    data: totalSales,
-                    backgroundColor: [
-                        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-                        '#FF9F40', '#E7E9ED', '#8C9EFF', '#00CC99', '#FF99CC'
-                    ],
-                    hoverOffset: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    },
-                    title: {
-                        display: true,
-                        text: 'Best Selling Products Categories'
-                    },
-                }
-            }
-        });
-        
-        // Extract data from PHP to JavaScript
-        const name_sinhala = {!!json_encode($topSellingProducts -> pluck('name_sinhala')) !!};
-        const totalSalesP = {!!json_encode($topSellingProducts -> pluck('total_quantity_sold')) !!};
-
-        // Create the pie chart
-        const ctxP = document.getElementById('bestSellingProducts').getContext('2d');
-        new Chart(ctxP, {
-            type: 'pie',
-            data: {
-                labels: name_sinhala,
-                datasets: [{
-                    label: 'Total Sales',
-                    data: totalSalesP,
-                    backgroundColor: [
-                        '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-                        '#FF9F40', '#E7E9ED', '#8C9EFF', '#00CC99', '#FF99CC'
-                    ],
-                    hoverOffset: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    },
-                    title: {
-                        display: true,
-                        text: 'Best Selling Products Categories'
-                    },
-                }
-            }
+                });
+            } catch (e) { console.error('prods', e); }
         });
     </script>
-</body>
-
-</html>
+@endpush
