@@ -228,3 +228,13 @@ a{text-decoration:none;}
 }
 ::-webkit-scrollbar{width:8px; height:8px;}
 ::-webkit-scrollbar-thumb{background:var(--border); border-radius:8px;}
+
+/* ===== Buttons (app additions) ===== */
+.btn-accent{background:var(--accent); color:var(--accent-ink); border:none; border-radius:10px; font-weight:600; padding:.55rem 1rem;}
+.btn-accent:hover{filter:brightness(1.08); color:var(--accent-ink);}
+.btn-accent:disabled{opacity:.7;}
+.btn-soft{background:var(--surface); border:1px solid var(--border); color:var(--text); border-radius:10px; font-weight:600; padding:.55rem 1rem;}
+.btn-soft:hover{background:var(--bg); color:var(--text);}
+.btn-soft.disabled, .btn-accent.disabled{pointer-events:none; opacity:.65;}
+.page-title{font-size:1.6rem;}
+.page-sub{color:var(--text-muted); font-size:.88rem;}

@@ -1,464 +1,329 @@
-<!DOCTYPE html>
-<html lang="en">
+@extends('layouts.bakery')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Admin | Dashboard</title>
-    <link rel="icon" href="{{ asset('assets/images/logo.png') }}">
+@section('title', 'Order Admin | Dashboard')
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="{{ asset('assets/vendor/bootstrap/css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/circular-std/style.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/libs/css/style.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/fontawesome/css/fontawesome-all.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/charts/chartist-bundle/chartist.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/charts/morris-bundle/morris.css') }}">
-    <link rel="stylesheet"
-        href="{{ asset('assets/vendor/fonts/material-design-iconic-font/css/materialdesignicons.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/charts/c3charts/c3.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/vendor/fonts/flag-icon-css/flag-icon.min.css') }}">
+@section('content')
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {{-- Page header --}}
+    <div class="d-flex flex-wrap justify-content-between align-items-end mb-4 gap-2">
+        <div>
+            <h1 class="display-font page-title mb-1">{{ Auth::user()->name }} Dashboard 🥐</h1>
+            <div class="page-sub">Here's what's rising in the bakery today — {{ now()->format('l, d F Y') }}</div>
+        </div>
+        @if (Auth::user()->role === 'o_admin')
+            <button class="btn btn-accent btn-sm" onclick="loadDashboardData();" id="refreshDashBtn">
+                <span id="rfs"><i class="bi bi-arrow-clockwise me-1"></i> Refresh dashboard</span>
+                <span id="spn" style="display:none;"><span class="spinner-border spinner-border-sm me-1"></span> Loading…</span>
+            </button>
+        @endif
+    </div>
 
-</head>
-
-<body>
-
-    <!-- header  -->
-    @include('order-admin.components.header')
-    <!-- /header  -->
-
-    @if (Auth::user()->role === 'sales_admin')
-        <!-- menu -->
-        @include('order-admin.components.menu-sales-admin')
-        <!-- /menu -->
-    @else
-        <!-- menu -->
-        @include('order-admin.components.menu')
-        <!-- /menu -->
+    {{-- Alerts --}}
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+    @if (session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+    @if (session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
-    <!-- content -->
-    <div class="dashboard-wrapper">
-        <div class="dashboard-ecommerce">
-            <div class="container-fluid dashboard-content ">
-                <!-- ============================================================== -->
-                <!-- pageheader  -->
-                <!-- ============================================================== -->
-                <div class="row">
-                    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
-                        <div class="page-header">
-                            <h2 class="pageheader-title"> {{Auth::user()->name}} Dashboard </h2>
-                            <div class="page-breadcrumb">
-                                <nav aria-label="breadcrumb">
-                                    <ol class="breadcrumb">
-                                        <li class="breadcrumb-item"><a href="#" class="breadcrumb-link">Dashboard</a>
-                                        </li>
-                                    </ol>
-                                </nav>
-                            </div>
-                        </div>
-                    </div>
+    {{-- Admin quick actions --}}
+    @if (Auth::user()->role === 'o_admin')
+        <div class="panel mb-4">
+            <div class="panel-head mb-2">
+                <div>
+                    <h2>Quick actions</h2>
+                    <div class="sub">Google Sheet summaries & transfers</div>
                 </div>
-                <!-- ============================================================== -->
-                <!-- end pageheader  -->
-                <!-- ============================================================== -->
-                <div class="ecommerce-widget">
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ route('morning-summary') }}" class="btn btn-soft btn-sm refresh-link">
+                    <i class="bi bi-sunrise me-1"></i> Morning Summary
+                </a>
+                <a href="{{ route('evening-summary') }}" class="btn btn-soft btn-sm refresh-link">
+                    <i class="bi bi-sunset me-1"></i> Evening Summary
+                </a>
+                <a href="{{ route('morning-shop-report') }}" class="btn btn-soft btn-sm refresh-link">
+                    <i class="bi bi-clipboard-data me-1"></i> Morning Shop Report
+                </a>
+                <a href="{{ route('evening-shop-report') }}" class="btn btn-soft btn-sm refresh-link">
+                    <i class="bi bi-clipboard-data-fill me-1"></i> Evening Shop Report
+                </a>
+                @if (Auth::user()->email === config('app.processing_transfer_email', 'adminkusaldilshan@gmail.com'))
+                    <a href="/processing-transfer" class="btn btn-accent btn-sm refresh-link">
+                        <i class="bi bi-arrow-right-circle me-1"></i> Processing to Completed
+                    </a>
+                @endif
+            </div>
+        </div>
+    @endif
 
-                    @if (Auth::user()->role === 'o_admin' && Auth::user()->email === config('app.processing_transfer_email', 'adminkusaldilshan@gmail.com'))
-                        <div class="row mb-2 g-2">
-                            <div class="col-12 col-lg-3 d-grid">
-                                <a href="/processing-transfer" class="btn btn-danger mb-2 w-100 refresh-link">Processing to
-                                    Completed</a> <!-- Added w-100 -->
-                            </div>
-                        </div>
-                    @endif
+    {{-- KPI row : order counts --}}
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="kpi-card">
+                <div class="kpi-top">
+                    <div class="kpi-icon bg-tint-caramel"><i class="bi bi-hourglass-split"></i></div>
+                </div>
+                <div class="kpi-label">Pending Orders</div>
+                <div class="kpi-value" id="pending_orders_count">—</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="kpi-card">
+                <div class="kpi-top">
+                    <div class="kpi-icon bg-tint-blueberry"><i class="bi bi-arrow-repeat"></i></div>
+                </div>
+                <div class="kpi-label">Processing Orders</div>
+                <div class="kpi-value" id="processing_orders_count">—</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="kpi-card">
+                <div class="kpi-top">
+                    <div class="kpi-icon bg-tint-mint"><i class="bi bi-check2-circle"></i></div>
+                </div>
+                <div class="kpi-label">Completed Orders</div>
+                <div class="kpi-value" id="complete_orders_count">—</div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="kpi-card">
+                <div class="kpi-top">
+                    <div class="kpi-icon bg-tint-accent"><i class="bi bi-search"></i></div>
+                </div>
+                <div class="kpi-label">Under Review</div>
+                <div class="kpi-value" id="under_review_orders_count">—</div>
+            </div>
+        </div>
+    </div>
 
-                    @if (Auth::user()->role === 'o_admin')
-                        <div class="row mb-2 g-2">
-                            <div class="col-12">
-                                <div class="card">
-                                    <div class="card-body">
-                                        @if ($errors->any())
-                                            <div class="alert alert-danger">
-                                                <ul>
-                                                    @foreach ($errors->all() as $error)
-                                                        <li>{{ $error }}</li>
-                                                    @endforeach
-                                                </ul>
-                                            </div>
-                                        @endif
-                                        @if (session('success'))
-                                            <div class="alert alert-success">
-                                                {{ session('success') }}
-                                            </div>
-                                        @endif
-                                        @if (session('error'))
-                                            <div class="alert alert-danger">
-                                                {{ session('error') }}
-                                            </div>
-                                        @endif
-                                        <div class="row">
-                                            <div class="col-12 col-lg-3 d-grid">
-                                                <button class="btn btn-success mb-2 w-100" onclick="loadDashboardData();">
-                                                    <span style="display: block;" id="rfs">
-                                                        Refresh dashboard
-                                                    </span>
-                                                    <span style="display: none;" id="spn">
-                                                        Loading...
-                                                    </span>
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-12 col-lg-3 d-grid">
-                                                <a href="{{route('morning-summary')}}"
-                                                    class="btn btn-primary mb-2 w-100 refresh-link">Refresh Morning Summary</a>
-                                                <!-- Added w-100 -->
-                                            </div>
-                                            <div class="col-12 col-lg-3 d-grid">
-                                                <a href="{{route('evening-summary')}}"
-                                                    class="btn btn-primary mb-2 w-100 refresh-link">Refresh Evening Summary</a>
-                                                <!-- Added w-100 -->
-                                            </div>
-                                            <div class="col-12 col-lg-3 d-grid">
-                                                <a href="{{route('morning-shop-report')}}"
-                                                    class="btn btn-primary mb-2 w-100 refresh-link">Refresh Morning Shop Report</a>
-                                                <!-- Added w-100 -->
-                                            </div>
-                                            <div class="col-12 col-lg-3 d-grid">
-                                                <a href="{{route('evening-shop-report')}}"
-                                                    class="btn btn-primary mb-2 w-100 refresh-link">Refresh Evening Shop Report</a>
-                                                <!-- Added w-100 -->
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                    @endif
-
-
-                    <div class="row">
-                        <!-- ============================================================== -->
-                        <!-- sales  -->
-                        <!-- ============================================================== -->
-                        <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12 col-12">
-                            <div class="card border-3 border-top border-top-primary">
-                                <div class="card-body">
-                                    <h5 class="text-muted">Pending Orders Count</h5>
-                                    <div class="metric-value d-inline-block">
-                                        <h1 class="mb-1" id="pending_orders_count">
-                                        </h1>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- ============================================================== -->
-                        <!-- end sales  -->
-                        <!-- ============================================================== -->
-                        <!-- ============================================================== -->
-                        <!-- new customer  -->
-                        <!-- ============================================================== -->
-                        <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12 col-12">
-                            <div class="card border-3 border-top border-top-primary">
-                                <div class="card-body">
-                                    <h5 class="text-muted">Processing Orders Count</h5>
-                                    <div class="metric-value d-inline-block">
-                                        <h1 class="mb-1" id="processing_orders_count">
-                                        </h1>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- ============================================================== -->
-                        <!-- end new customer  -->
-                        <!-- ============================================================== -->
-                        <!-- ============================================================== -->
-                        <!-- visitor  -->
-                        <!-- ============================================================== -->
-                        <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12 col-12">
-                            <div class="card border-3 border-top border-top-primary">
-                                <div class="card-body">
-                                    <h5 class="text-muted">Total Completed Orders Count</h5>
-                                    <div class="metric-value d-inline-block">
-                                        <h1 class="mb-1" id="complete_orders_count">
-                                        </h1>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- ============================================================== -->
-                        <!-- end visitor  -->
-                        <!-- ============================================================== -->
-                        <!-- ============================================================== -->
-                        <!-- total orders  -->
-                        <!-- ============================================================== -->
-                        <div class="col-xl-3 col-lg-3 col-md-6 col-sm-12 col-12">
-                            <div class="card border-3 border-top border-top-primary">
-                                <div class="card-body">
-                                    <h5 class="text-muted">Under Review Orders Count</h5>
-                                    <div class="metric-value d-inline-block">
-                                        <h1 class="mb-1" id="under_review_orders_count">
-                                        </h1>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- ============================================================== -->
-                        <!-- end total orders  -->
-                        <!-- ============================================================== -->
+    {{-- Revenue row --}}
+    @if (Auth::user()->role != 'view')
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-lg-4">
+                <div class="kpi-card">
+                    <div class="kpi-top">
+                        <div class="kpi-icon bg-tint-mint"><i class="bi bi-cash-coin"></i></div>
                     </div>
-
-                    @if (Auth::user()->role != 'view')
-                        <div class="row">
-                            <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 col-12">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h5 class="text-muted">Today Total Revenue</h5>
-                                        <div class="metric-value d-inline-block">
-                                            <h1 class="mb-1" id="today_total_revenue"></h1>
-                                        </div>
-                                        <div class="metric-label d-inline-block float-right font-weight-bold">
-
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 col-12">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h5 class="text-muted">This week Total Revenue <small class="alert-warning p-1"
-                                                id="weeks_gap">
-                                            </small></h5>
-                                        <div class="metric-value d-inline-block">
-                                            <h1 class="mb-1" id="last7Days_total_revenue">
-                                            </h1>
-                                        </div>
-                                        <div class="metric-label d-inline-block float-right text-success font-weight-bold">
-
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-xl-4 col-lg-4 col-md-4 col-sm-12 col-12">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h5 class="text-muted">This Month Total Revenue <small class="alert-warning p-1"
-                                                id="month_gap"> </small></h5>
-                                        <div class="metric-value d-inline-block">
-                                            <h1 class="mb-1" id="lastMonth_total_revenue">
-                                            </h1>
-                                        </div>
-                                        <div class="metric-label d-inline-block float-right text-primary font-weight-bold">
-
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
-
-                    <!-- --------------------------------------------------------------------------------------------------------------                     -->
-
-                    <div class="row">
-                        <div class="col-12 col-md-6">
-                            <div class="card">
-                                <h2 class="card-header">Last 12 Months Revenue</h2>
-                                <div class="card-body">
-                                    <canvas id="barChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-12 col-md-6">
-                            <div class="card">
-                                <h2 class="card-header">Last 30 Days Revenue</h2>
-                                <div class="card-body">
-                                    <canvas id="past30DaysRevenueChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-12 col-md-6">
-                            <div class="card">
-                                <h2 class="card-header">Top 10 Best Selling Shops</h2>
-                                <div class="card-body">
-                                    <canvas id="topSellingShopsChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-12 col-md-6">
-                            <div class="card">
-                                <h2 class="card-header">Top 10 Best Selling Items</h2>
-                                <div class="card-body">
-                                    <canvas id="topSellingItemsChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="card">
-                                <h2 class="card-header">Top Best Selling Reps All Time</h2>
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-12 col-md-6">
-                                            <canvas id="topSellingRepsAllTimeChart"></canvas>
-                                        </div>
-                                        <div class="col-12 col-md-6">
-                                            <table class="table">
-                                                <thead class="table-info">
-                                                    <tr>
-                                                        <th>Rep Name</th>
-                                                        <th>Total Sales</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="topRepsTableBody">
-
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="card">
-                                <h2 class="card-header">Top Best Selling Reps Today</h2>
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-12 col-md-6">
-                                            <canvas id="topSellingRepsTodayChart"></canvas>
-                                        </div>
-                                        <div class="col-12 col-md-6">
-                                            <table class="table">
-                                                <thead class="table-info">
-                                                    <tr>
-                                                        <th>Rep Name</th>
-                                                        <th>Total Sales</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="top_selling_reps_today">
-
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="card">
-                                <h2 class="card-header">Top Best Selling Reps Last 30 Days</h2>
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-12 col-md-6">
-                                            <canvas id="topSellingRepsLast30DaysChart"></canvas>
-                                        </div>
-                                        <div class="col-12 col-md-6">
-                                            <table class="table">
-                                                <thead class="table-info">
-                                                    <tr>
-                                                        <th>Rep Name</th>
-                                                        <th>Total Sales</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="top_selling_reps_last_30_days">
-
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="kpi-label">Today Total Revenue</div>
+                    <div class="kpi-value" id="today_total_revenue" style="font-size:1.5rem;">—</div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-4">
+                <div class="kpi-card">
+                    <div class="kpi-top">
+                        <div class="kpi-icon bg-tint-caramel"><i class="bi bi-calendar-week"></i></div>
                     </div>
-
-                    <!-- -------------------------------------------------------------------------------------------------------------------                     -->
-
-                    <div class="row">
-                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12">
-                            <div class="card">
-                                <h5 class="card-header">Recent Orders</h5>
-                                <div class="card-body">
-                                    <div class="table-responsive ">
-                                        <table class="table">
-                                            <thead class="bg-light">
-                                                <tr class="border-0">
-                                                    <th class="border-0">#</th>
-                                                    <th class="border-0">Order Id</th>
-                                                    <th class="border-0">Outlet</th>
-                                                    <th class="border-0">Delivery time</th>
-                                                    <th class="border-0">Order create time</th>
-                                                    <th class="border-0">Estimate&nbsp;full&nbsp;amount</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="latestOrdersBody">
-
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 col-12">
-                            <div class="card">
-                                <h5 class="card-header">Top 10 Orders</h5>
-                                <div class="card-body">
-                                    <div class="table-responsive ">
-                                        <table class="table">
-                                            <thead class="bg-light">
-                                                <tr class="border-0">
-                                                    <th class="border-0">#</th>
-                                                    <th class="border-0">Order Id</th>
-                                                    <th class="border-0">Outlet</th>
-                                                    <th class="border-0">Delivery time</th>
-                                                    <th class="border-0">Order create time</th>
-                                                    <th class="border-0">Estimate&nbsp;full&nbsp;amount</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="top10OrdersBody">
-
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="kpi-label">This Week Revenue <small class="mono" id="weeks_gap"></small></div>
+                    <div class="kpi-value" id="last7Days_total_revenue" style="font-size:1.5rem;">—</div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-4">
+                <div class="kpi-card">
+                    <div class="kpi-top">
+                        <div class="kpi-icon bg-tint-blueberry"><i class="bi bi-calendar-month"></i></div>
                     </div>
-
+                    <div class="kpi-label">This Month Revenue <small class="mono" id="month_gap"></small></div>
+                    <div class="kpi-value" id="lastMonth_total_revenue" style="font-size:1.5rem;">—</div>
                 </div>
             </div>
         </div>
-        <!-- ============================================================== -->
-        <!-- end footer -->
-        <!-- ============================================================== -->
+    @endif
+
+    {{-- Revenue charts --}}
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-lg-6">
+            <div class="panel h-100">
+                <div class="panel-head">
+                    <div>
+                        <h2>Last 12 Months Revenue</h2>
+                        <div class="sub">Monthly totals (Rs.)</div>
+                    </div>
+                </div>
+                <canvas id="barChart"></canvas>
+            </div>
+        </div>
+        <div class="col-12 col-lg-6">
+            <div class="panel h-100">
+                <div class="panel-head">
+                    <div>
+                        <h2>Last 30 Days Revenue</h2>
+                        <div class="sub">Daily totals (Rs.)</div>
+                    </div>
+                </div>
+                <canvas id="past30DaysRevenueChart"></canvas>
+            </div>
+        </div>
+        <div class="col-12 col-lg-6">
+            <div class="panel h-100">
+                <div class="panel-head">
+                    <div>
+                        <h2>Top 10 Best Selling Shops</h2>
+                        <div class="sub">By total sales</div>
+                    </div>
+                </div>
+                <canvas id="topSellingShopsChart"></canvas>
+            </div>
+        </div>
+        <div class="col-12 col-lg-6">
+            <div class="panel h-100">
+                <div class="panel-head">
+                    <div>
+                        <h2>Top 10 Best Selling Items</h2>
+                        <div class="sub">By quantity sold</div>
+                    </div>
+                </div>
+                <canvas id="topSellingItemsChart"></canvas>
+            </div>
+        </div>
     </div>
 
-    <!-- jQuery 3.3.1 -->
-    <script src="{{ asset('assets/vendor/jquery/jquery-3.3.1.min.js') }}"></script>
-    <!-- Bootstrap bundle JS -->
-    <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.js') }}"></script>
-    <!-- SlimScroll JS -->
-    <script src="{{ asset('assets/vendor/slimscroll/jquery.slimscroll.js') }}"></script>
-    <!-- Main JS -->
-    <script src="{{ asset('assets/libs/js/main-js.js') }}"></script>
-    <!-- Chartist JS -->
-    <script src="{{ asset('assets/vendor/charts/chartist-bundle/chartist.min.js') }}"></script>
-    <!-- Sparkline JS -->
-    <script src="{{ asset('assets/vendor/charts/sparkline/jquery.sparkline.js') }}"></script>
-    <!-- Morris JS -->
-    <script src="{{ asset('assets/vendor/charts/morris-bundle/raphael.min.js') }}"></script>
-    <script src="{{ asset('assets/vendor/charts/morris-bundle/morris.js') }}"></script>
-    <!-- C3 Charts JS -->
-    <script src="{{ asset('assets/vendor/charts/c3charts/c3.min.js') }}"></script>
-    <script src="{{ asset('assets/vendor/charts/c3charts/d3-5.4.0.min.js') }}"></script>
-    <script src="{{ asset('assets/vendor/charts/c3charts/C3chartjs.js') }}"></script>
-    <!-- Dashboard E-commerce JS -->
-    <script src="{{ asset('assets/libs/js/dashboard-ecommerce.js') }}"></script>
-    <!-- Chart Bundle JS -->
-    <script src="{{ asset('assets/vendor/charts/charts-bundle/Chart.bundle.js') }}"></script>
-    <script src="{{ asset('assets/vendor/charts/charts-bundle/chartjs.js') }}"></script>
+    {{-- Rep performance --}}
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="panel">
+                <div class="panel-head">
+                    <div>
+                        <h2>Top Best Selling Reps — All Time</h2>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-12 col-md-6"><canvas id="topSellingRepsAllTimeChart"></canvas></div>
+                    <div class="col-12 col-md-6">
+                        <div class="table-responsive">
+                            <table class="table table-bakery">
+                                <thead>
+                                    <tr>
+                                        <th>Rep Name</th>
+                                        <th>Total Sales</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="topRepsTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="panel">
+                <div class="panel-head">
+                    <div>
+                        <h2>Top Best Selling Reps — Today</h2>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-12 col-md-6"><canvas id="topSellingRepsTodayChart"></canvas></div>
+                    <div class="col-12 col-md-6">
+                        <div class="table-responsive">
+                            <table class="table table-bakery">
+                                <thead>
+                                    <tr>
+                                        <th>Rep Name</th>
+                                        <th>Total Sales</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="top_selling_reps_today"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="panel">
+                <div class="panel-head">
+                    <div>
+                        <h2>Top Best Selling Reps — Last 30 Days</h2>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-12 col-md-6"><canvas id="topSellingRepsLast30DaysChart"></canvas></div>
+                    <div class="col-12 col-md-6">
+                        <div class="table-responsive">
+                            <table class="table table-bakery">
+                                <thead>
+                                    <tr>
+                                        <th>Rep Name</th>
+                                        <th>Total Sales</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="top_selling_reps_last_30_days"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    {{-- Orders tables --}}
+    <div class="row g-3">
+        <div class="col-12 col-xl-6">
+            <div class="panel h-100">
+                <div class="panel-head">
+                    <div>
+                        <h2>Recent Orders</h2>
+                        <div class="sub">Latest 10 orders</div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bakery">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Order Id</th>
+                                <th>Outlet</th>
+                                <th>Delivery</th>
+                                <th>Created</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="latestOrdersBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-xl-6">
+            <div class="panel h-100">
+                <div class="panel-head">
+                    <div>
+                        <h2>Top 10 Orders</h2>
+                        <div class="sub">Highest value orders</div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bakery">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Order Id</th>
+                                <th>Outlet</th>
+                                <th>Delivery</th>
+                                <th>Created</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="top10OrdersBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+@endsection
+
+@push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
     <script>
@@ -468,27 +333,56 @@
             return document.getElementById(id) || document.createElement('div');
         }
 
+        function money(v) {
+            return 'රු. ' + parseFloat(v).toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function barOptions(c, yLabel, xLabel) {
+            return {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: c.text, font: { family: 'Inter' } },
+                        title: xLabel ? { display: true, text: xLabel, color: c.text } : undefined
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: c.grid },
+                        ticks: {
+                            color: c.text,
+                            font: { family: 'Inter' },
+                            callback: function (value) {
+                                return 'Rs ' + value.toLocaleString(undefined, { maximumFractionDigits: 2 });
+                            }
+                        },
+                        title: yLabel ? { display: true, text: yLabel, color: c.text } : undefined
+                    }
+                }
+            };
+        }
+
+        const pieColors = ['#B23A48', '#C98A3B', '#4C7C6B', '#5B7FA6', '#8A5A83',
+                           '#D97B4F', '#6FAF9B', '#84AAD6', '#C9AF95', '#E0576A'];
+
         function initialLoad() {
-            axios.get('{{ route("order-admin.first-load-data") }}')
+            axios.get('{{ route('order-admin.first-load-data') }}')
                 .then(res => {
                     const d = res.data;
-
-                    // ── Dashboard stats ──
                     el('pending_orders_count').innerHTML = d.stats.pending_orders_count;
                     el('processing_orders_count').innerHTML = d.stats.processing_orders_count;
                     el('complete_orders_count').innerHTML = d.stats.complete_orders_count;
                     el('under_review_orders_count').innerHTML = d.stats.under_review_orders_count;
 
-                    el('today_total_revenue').innerHTML =
-                        'රු. ' + parseFloat(d.stats.today_total_revenue).toLocaleString('en-US', { minimumFractionDigits: 2 });
-
-                    el('weeks_gap').innerHTML = `(${d.stats.startOfThisWeek} to ${d.stats.endOfThisWeek})`;
-                    el('last7Days_total_revenue').innerHTML =
-                        'රු. ' + parseFloat(d.stats.last7Days_total_revenue).toLocaleString('en-US', { minimumFractionDigits: 2 });
-
-                    el('month_gap').innerHTML = `(${d.stats.startOfThisMonth} to ${d.stats.endOfThisMonth})`;
-                    el('lastMonth_total_revenue').innerHTML =
-                        'රු. ' + parseFloat(d.stats.lastMonth_total_revenue).toLocaleString('en-US', { minimumFractionDigits: 2 });
+                    el('today_total_revenue').innerHTML = money(d.stats.today_total_revenue);
+                    el('weeks_gap').innerHTML = `(${d.stats.startOfThisWeek} — ${d.stats.endOfThisWeek})`;
+                    el('last7Days_total_revenue').innerHTML = money(d.stats.last7Days_total_revenue);
+                    el('month_gap').innerHTML = `(${d.stats.startOfThisMonth} — ${d.stats.endOfThisMonth})`;
+                    el('lastMonth_total_revenue').innerHTML = money(d.stats.lastMonth_total_revenue);
                 })
                 .catch(err => {
                     console.error('Error fetching initial data:', err);
@@ -497,533 +391,250 @@
 
         function loadDashboardData() {
             el('rfs').style.display = 'none';
-            el('spn').style.display = 'block';
-            axios.get('{{ route("api.order-admin.dashboard-data") }}')
+            el('spn').style.display = 'inline';
+            axios.get('{{ route('api.order-admin.dashboard-data') }}')
                 .then(res => {
-                    const d = res.data.stats; // shortcut for easier access
+                    const d = res.data.stats;
+                    const c = window.pbChartColors();
 
-                    // Update Stats
+                    // ── Stats ──
                     el('pending_orders_count').innerHTML = d.pending_orders_count;
                     el('processing_orders_count').innerHTML = d.processing_orders_count;
                     el('complete_orders_count').innerHTML = d.complete_orders_count;
                     el('under_review_orders_count').innerHTML = d.under_review_orders_count;
 
-                    el('today_total_revenue').innerHTML =
-                        'රු. ' + parseFloat(d.today_total_revenue).toLocaleString('en-US', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
-                        });
+                    el('today_total_revenue').innerHTML = money(d.today_total_revenue);
+                    el('weeks_gap').innerHTML = `(${d.startOfThisWeek} — ${d.endOfThisWeek})`;
+                    el('last7Days_total_revenue').innerHTML = money(d.last7Days_total_revenue);
+                    el('month_gap').innerHTML = `(${d.startOfThisMonth} — ${d.endOfThisMonth})`;
+                    el('lastMonth_total_revenue').innerHTML = money(d.lastMonth_total_revenue);
 
-                    el('weeks_gap').innerHTML = `(${d.startOfThisWeek} to ${d.endOfThisWeek})`;
-                    el('last7Days_total_revenue').innerHTML =
-                        'රු. ' + parseFloat(d.last7Days_total_revenue).toLocaleString('en-US', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
-                        });
-
-                    el('month_gap').innerHTML = `(${d.startOfThisMonth} to ${d.endOfThisMonth})`;
-                    el('lastMonth_total_revenue').innerHTML =
-                        'රු. ' + parseFloat(d.lastMonth_total_revenue).toLocaleString('en-US', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
-                        });
-
-                    //--------------------------------------------------------------------------------------------------------------
-
-                    // Fix: Correctly map months and amounts
+                    // ── Last 12 months revenue (bar) ──
                     const months = d.last12montsrevenue.map(item => {
                         const date = new Date(item.month + '-01');
-                        return date.toLocaleDateString('en-US', {
-                            month: 'short',
-                            year: 'numeric'
-                        });
-                        // Example: "Jan 2025", "Feb 2025"
+                        return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
                     });
-
                     const amounts = d.last12montsrevenue.map(item => parseFloat(item.amount));
 
-                    // Destroy previous chart if exists
-                    if (window.myBarChart instanceof Chart) {
-                        window.myBarChart.destroy();
-                    }
-
-                    const barCtx = el('barChart').getContext('2d');
-
-                    window.myBarChart = new Chart(barCtx, {
+                    if (window.myBarChart instanceof Chart) window.myBarChart.destroy();
+                    window.myBarChart = new Chart(el('barChart').getContext('2d'), {
                         type: 'bar',
                         data: {
                             labels: months,
                             datasets: [{
                                 label: 'Orders Amount (Rs)',
                                 data: amounts,
-                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                                borderColor: 'rgba(75, 192, 192, 1)',
-                                borderWidth: 1
+                                backgroundColor: c.accent,
+                                borderRadius: 6,
+                                maxBarThickness: 34
                             }]
                         },
-                        options: {
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    ticks: {
-                                        // Format Y-axis values with commas and currency symbol
-                                        callback: function (value, index, values) {
-                                            return 'Rs ' + value.toLocaleString(undefined, {
-                                                maximumFractionDigits: 2
-                                            });
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        options: barOptions(c)
                     });
 
-                    //--------------------------------------------------------------------------------------------------------------
-                    // === TOP 10 SELLING SHOPS PIE CHART ===
-                    const ctx = el('topSellingShopsChart').getContext('2d');
-                    // Destroy previous chart if exists
-                    if (window.topShopsChart instanceof Chart) {
-                        window.topShopsChart.destroy();
-                    }
-
-                    const {
-                        topSellingShops_labels,
-                        topSellingShops_data
-                    } = d.topSellingShops;
-
-                    window.topShopsChart = new Chart(ctx, {
-                        type: 'pie',
-                        data: {
-                            labels: topSellingShops_labels,
-                            datasets: [{
-                                label: 'Total Sales',
-                                data: topSellingShops_data,
-                                backgroundColor: [
-                                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-                                    '#FF9F40', '#E7E9ED', '#8C9EFF', '#00CC99', '#FF99CC'
-                                ],
-                                hoverOffset: 4
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            plugins: {
-                                legend: {
-                                    position: 'top',
-                                },
-                                title: {
-                                    display: true,
-                                    text: 'Top 10 Selling Shops'
-                                },
-                            }
-                        }
-                    });
-                    //-------------------------------------------------------------------------------------------------------------
-                    const ctxItems = el('topSellingItemsChart').getContext('2d');
-
-                    // Safe destructuring with defaults
-                    const {
-                        topItems_labels,
-                        topItems_data
-                    } = d.topSellingItems || {};
-
-                    // Destroy existing chart
-                    if (window.topItemsChart instanceof Chart) {
-                        window.topItemsChart.destroy();
-                    }
-
-                    window.topItemsChart = new Chart(ctxItems, {
-                        type: 'pie',
-                        data: {
-                            labels: topItems_labels,
-                            datasets: [{
-                                label: 'Total Quantity Sold',
-                                data: topItems_data,
-                                backgroundColor: [
-                                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-                                    '#FF9F40', '#E7E9ED', '#8C9EFF', '#00CC99', '#FF99CC'
-                                ],
-                                hoverOffset: 4
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            plugins: {
-                                legend: {
-                                    position: 'top',
-                                },
-                                title: {
-                                    display: true,
-                                    text: 'Top 10 Selling Items'
-                                },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function (context) {
-                                            const label = context.label || '';
-                                            const value = context.raw || 0;
-                                            return `${label}: ${value} units`;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    });
-                    //--------------------------------------------------------------------------------------------------------------
-                    // last 30 days revenue chart update
-                    const ctx30days = el('past30DaysRevenueChart').getContext('2d');
-                    const {
-                        labels: revenueLabels,
-                        data: revenueData
-                    } = d.revenueData;
-                    // Destroy previous chart if exists
-                    if (window.rev30Chart instanceof Chart) {
-                        window.rev30Chart.destroy();
-                    }
-                    window.rev30Chart = new Chart(ctx30days, {
+                    // ── Last 30 days revenue (bar) ──
+                    const { labels: revenueLabels, data: revenueData } = d.revenueData;
+                    if (window.rev30Chart instanceof Chart) window.rev30Chart.destroy();
+                    window.rev30Chart = new Chart(el('past30DaysRevenueChart').getContext('2d'), {
                         type: 'bar',
                         data: {
                             labels: revenueLabels,
                             datasets: [{
                                 label: 'Revenue (Rs)',
                                 data: revenueData,
-                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                                borderColor: 'rgba(75, 192, 192, 1)',
-                                borderWidth: 1
+                                backgroundColor: c.caramel,
+                                borderRadius: 6,
+                                maxBarThickness: 20
+                            }]
+                        },
+                        options: barOptions(c, 'Revenue (Rs)', 'Date')
+                    });
+
+                    // ── Top 10 shops (pie) ──
+                    const { topSellingShops_labels, topSellingShops_data } = d.topSellingShops;
+                    if (window.topShopsChart instanceof Chart) window.topShopsChart.destroy();
+                    window.topShopsChart = new Chart(el('topSellingShopsChart').getContext('2d'), {
+                        type: 'pie',
+                        data: {
+                            labels: topSellingShops_labels,
+                            datasets: [{
+                                label: 'Total Sales',
+                                data: topSellingShops_data,
+                                backgroundColor: pieColors,
+                                hoverOffset: 4
                             }]
                         },
                         options: {
                             responsive: true,
                             plugins: {
-                                legend: {
-                                    display: false,
-                                },
-                                title: {
-                                    display: true,
-                                    text: 'Past 30 Days Revenue'
-                                }
-                            },
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    title: {
-                                        display: true,
-                                        text: 'Revenue (Rs)'
-                                    }
-                                },
-                                x: {
-                                    title: {
-                                        display: true,
-                                        text: 'Date'
+                                legend: { position: 'top', labels: { color: c.text, font: { family: 'Inter' } } }
+                            }
+                        }
+                    });
+
+                    // ── Top 10 items (pie) ──
+                    const { topItems_labels, topItems_data } = d.topSellingItems || {};
+                    if (window.topItemsChart instanceof Chart) window.topItemsChart.destroy();
+                    window.topItemsChart = new Chart(el('topSellingItemsChart').getContext('2d'), {
+                        type: 'pie',
+                        data: {
+                            labels: topItems_labels,
+                            datasets: [{
+                                label: 'Total Quantity Sold',
+                                data: topItems_data,
+                                backgroundColor: pieColors,
+                                hoverOffset: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { position: 'top', labels: { color: c.text, font: { family: 'Inter' } } },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function (context) {
+                                            return `${context.label || ''}: ${context.raw || 0} units`;
+                                        }
                                     }
                                 }
                             }
                         }
                     });
 
-                    //--------------------------------------------------------------------------------------------------------------
-                    // Update Top Selling Reps all Time Chart
-                    const ctxRepsAllTime = el('topSellingRepsAllTimeChart').getContext('2d');
-                    const {
-                        labels: repLabelsAllTime,
-                        data: repDataAllTime
-                    } = d.topSellingRepsAllTime.chartData;
-                    // Destroy previous chart if exists
-                    if (window.repsAllTimeChart instanceof Chart) {
-                        window.repsAllTimeChart.destroy();
-                    }
-                    window.repsAllTimeChart = new Chart(ctxRepsAllTime, {
+                    // ── Reps: all time ──
+                    const { labels: repLabelsAllTime, data: repDataAllTime } = d.topSellingRepsAllTime.chartData;
+                    if (window.repsAllTimeChart instanceof Chart) window.repsAllTimeChart.destroy();
+                    window.repsAllTimeChart = new Chart(el('topSellingRepsAllTimeChart').getContext('2d'), {
                         type: 'bar',
                         data: {
                             labels: repLabelsAllTime,
                             datasets: [{
                                 label: 'Total Sales (Rs)',
                                 data: repDataAllTime,
-                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                                borderColor: 'rgba(75, 192, 192, 1)',
-                                borderWidth: 1
+                                backgroundColor: c.mint,
+                                borderRadius: 6,
+                                maxBarThickness: 34
                             }]
                         },
-                        options: {
-                            responsive: true,
-                            plugins: {
-                                legend: {
-                                    display: false,
-                                },
-                                title: {
-                                    display: true,
-                                    text: 'Top 10 Best-Selling Reps'
-                                }
-                            },
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    title: {
-                                        display: true,
-                                        text: 'Total Sales (Rs)'
-                                    }
-                                },
-                                x: {
-                                    title: {
-                                        display: true,
-                                        text: 'Rep Name'
-                                    }
-                                }
-                            }
-                        }
+                        options: barOptions(c, 'Total Sales (Rs)', 'Rep Name')
                     });
+                    fillRepTable('topRepsTableBody', d.topSellingRepsAllTime.tableData);
 
-                    const tableBody = el('topRepsTableBody');
-                    // Clear existing table rows
-                    tableBody.innerHTML = '';
-                    // Populate table with new data
-                    d.topSellingRepsAllTime.tableData.forEach(rep => {
-                        const row = document.createElement('tr');
-                        const nameCell = document.createElement('td');
-                        nameCell.textContent = rep.name;
-                        const salesCell = document.createElement('td');
-                        salesCell.textContent = 'Rs.' + parseFloat(rep.total_sales).toLocaleString('en-US', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
-                        });
-                        row.appendChild(nameCell);
-                        row.appendChild(salesCell);
-                        tableBody.appendChild(row);
-                    });
-                    //-------------------------------------------------------------------------------------------------
-                    // Update Top Selling Reps Today Chart
-                    const ctxRepsToday = el('topSellingRepsTodayChart').getContext('2d');
-                    const {
-                        labels: repLabelsToday,
-                        data: repDataToday
-                    } = d.topSellingRepsToday.chartData;
-                    // Destroy previous chart if exists
-                    if (window.repsTodayChart instanceof Chart) {
-                        window.repsTodayChart.destroy();
-                    }
-                    window.repsTodayChart = new Chart(ctxRepsToday, {
+                    // ── Reps: today ──
+                    const { labels: repLabelsToday, data: repDataToday } = d.topSellingRepsToday.chartData;
+                    if (window.repsTodayChart instanceof Chart) window.repsTodayChart.destroy();
+                    window.repsTodayChart = new Chart(el('topSellingRepsTodayChart').getContext('2d'), {
                         type: 'bar',
                         data: {
                             labels: repLabelsToday,
                             datasets: [{
                                 label: 'Total Sales (Rs)',
                                 data: repDataToday,
-                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                                borderColor: 'rgba(75, 192, 192, 1)',
-                                borderWidth: 1
+                                backgroundColor: c.blueberry,
+                                borderRadius: 6,
+                                maxBarThickness: 34
                             }]
                         },
-                        options: {
-                            responsive: true,
-                            plugins: {
-                                legend: {
-                                    display: false,
-                                },
-                                title: {
-                                    display: true,
-                                    text: 'Top 10 Best-Selling Reps'
-                                }
-                            },
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    title: {
-                                        display: true,
-                                        text: 'Total Sales (Rs)'
-                                    }
-                                },
-                                x: {
-                                    title: {
-                                        display: true,
-                                        text: 'Rep Name'
-                                    }
-                                }
-                            }
-                        }
+                        options: barOptions(c, 'Total Sales (Rs)', 'Rep Name')
                     });
+                    fillRepTable('top_selling_reps_today', d.topSellingRepsToday.tableData);
 
-                    // Update Top Selling Reps Today Table
-                    const tableBodyToday = el('top_selling_reps_today');
-                    // Clear existing table rows
-                    tableBodyToday.innerHTML = '';
-                    // Populate table with new data
-                    d.topSellingRepsToday.tableData.forEach(rep => {
-                        const row = document.createElement('tr');
-                        const nameCell = document.createElement('td');
-                        nameCell.textContent = rep.name;
-                        const salesCell = document.createElement('td');
-                        salesCell.textContent = 'Rs.' + parseFloat(rep.total_sales).toLocaleString('en-US', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
-                        });
-                        row.appendChild(nameCell);
-                        row.appendChild(salesCell);
-                        tableBodyToday.appendChild(row);
-                    });
-
-                    //-------------------------------------------------------------------------------------------------
-                    // Update Top Selling Reps Last 30 Days Chart
-                    const ctxReps30Days = el('topSellingRepsLast30DaysChart').getContext('2d');
-                    const {
-                        labels: repLabels30Days,
-                        data: repData30Days
-                    } = d.topSellingRepsLast30Days.chartData;
-                    // Destroy previous chart if exists
-                    if (window.reps30Chart instanceof Chart) {
-                        window.reps30Chart.destroy();
-                    }
-                    window.reps30Chart = new Chart(ctxReps30Days, {
+                    // ── Reps: last 30 days ──
+                    const { labels: repLabels30Days, data: repData30Days } = d.topSellingRepsLast30Days.chartData;
+                    if (window.reps30Chart instanceof Chart) window.reps30Chart.destroy();
+                    window.reps30Chart = new Chart(el('topSellingRepsLast30DaysChart').getContext('2d'), {
                         type: 'bar',
                         data: {
                             labels: repLabels30Days,
                             datasets: [{
                                 label: 'Total Sales (Rs)',
                                 data: repData30Days,
-                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                                borderColor: 'rgba(75, 192, 192, 1)',
-                                borderWidth: 1
+                                backgroundColor: c.caramel,
+                                borderRadius: 6,
+                                maxBarThickness: 34
                             }]
                         },
-                        options: {
-                            responsive: true,
-                            plugins: {
-                                legend: {
-                                    display: false,
-                                },
-                                title: {
-                                    display: true,
-                                    text: 'Top 10 Best-Selling Reps'
-                                }
-                            },
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    title: {
-                                        display: true,
-                                        text: 'Total Sales (Rs)'
-                                    }
-                                },
-                                x: {
-                                    title: {
-                                        display: true,
-                                        text: 'Rep Name'
-                                    }
-                                }
-                            }
-                        }
+                        options: barOptions(c, 'Total Sales (Rs)', 'Rep Name')
                     });
+                    fillRepTable('top_selling_reps_last_30_days', d.topSellingRepsLast30Days.tableData);
 
-                    // Update Top Selling Reps Last 30 Days Table
-                    const tableBody30Days = el('top_selling_reps_last_30_days');
-                    // Clear existing table rows
-                    tableBody30Days.innerHTML = '';
-                    // Populate table with new data
-                    d.topSellingRepsLast30Days.tableData.forEach(rep => {
-                        const row = document.createElement('tr');
-                        const nameCell = document.createElement('td');
-                        nameCell.textContent = rep.name;
-                        const salesCell = document.createElement('td');
-                        salesCell.textContent = 'Rs.' + parseFloat(rep.total_sales).toLocaleString('en-US', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
-                        });
-                        row.appendChild(nameCell);
-                        row.appendChild(salesCell);
-                        tableBody30Days.appendChild(row);
-                    });
+                    // ── Recent orders table ──
+                    fillOrdersTable('latestOrdersBody', d.latest_orders, 'id');
 
-                    //-------------------------------------------------------------------------------------------------
-                    // Update Latest Orders Table
-                    const latestOrdersBody = el('latestOrdersBody');
-                    // Clear existing table rows
-                    latestOrdersBody.innerHTML = '';
-                    // Populate table with new data
-                    d.latest_orders.forEach((order, index) => {
-                        const row = document.createElement('tr');
-                        const indexCell = document.createElement('td');
-                        indexCell.textContent = index + 1;
-                        const orderIdCell = document.createElement('td');
-                        orderIdCell.textContent = order.id;
-                        const outletCell = document.createElement('td');
-                        outletCell.textContent = order.shop_name || order.shop;
-                        const deliveryTimeCell = document.createElement('td');
-                        deliveryTimeCell.textContent = order.time_period || 'N/A';
-                        const orderCreateTimeCell = document.createElement('td');
-                        const createdAt = new Date(order.order_created_at);
-                        orderCreateTimeCell.textContent = createdAt.toLocaleString();
-                        const estimateAmountCell = document.createElement('td');
-                        estimateAmountCell.textContent = 'Rs. ' + parseFloat(order.total_price).toLocaleString('en-US', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
-                        });
-                        row.appendChild(indexCell);
-                        row.appendChild(orderIdCell);
-                        row.appendChild(outletCell);
-                        row.appendChild(deliveryTimeCell);
-                        row.appendChild(orderCreateTimeCell);
-                        row.appendChild(estimateAmountCell);
-                        latestOrdersBody.appendChild(row);
-                    });
-
-                    //-------------------------------------------------------------------------------------------------
-                    // Update Top 10 Orders Table
-                    const top10OrdersBody = el('top10OrdersBody');
-                    // Clear existing table rows
-                    top10OrdersBody.innerHTML = '';
-                    // Populate table with new data
-                    d.top_orders.forEach((order, index) => {
-                        const row = document.createElement('tr');
-                        const indexCell = document.createElement('td');
-                        indexCell.textContent = index + 1;
-                        const orderIdCell = document.createElement('td');
-                        orderIdCell.textContent = order.unique_id;
-                        const outletCell = document.createElement('td');
-                        outletCell.textContent = order.name || order.shop;
-                        const deliveryTimeCell = document.createElement('td');
-                        deliveryTimeCell.textContent = order.time_period || 'N/A';
-                        const orderCreateTimeCell = document.createElement('td');
-                        const createdAt = new Date(order.order_created_at);
-                        orderCreateTimeCell.textContent = createdAt.toLocaleString();
-                        const estimateAmountCell = document.createElement('td');
-                        estimateAmountCell.textContent = 'Rs. ' + parseFloat(order.total_price).toLocaleString('en-US', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
-                        });
-                        row.appendChild(indexCell);
-                        row.appendChild(orderIdCell);
-                        row.appendChild(outletCell);
-                        row.appendChild(deliveryTimeCell);
-                        row.appendChild(orderCreateTimeCell);
-                        row.appendChild(estimateAmountCell);
-                        top10OrdersBody.appendChild(row);
-                    });
-
+                    // ── Top 10 orders table ──
+                    fillOrdersTable('top10OrdersBody', d.top_orders, 'unique_id');
                 })
                 .catch(err => {
                     console.error('Error loading dashboard data:', err);
                     alert('Failed to load dashboard data. Please try again.');
                 })
                 .finally(() => {
-                    el('rfs').style.display = 'block';
+                    el('rfs').style.display = 'inline';
                     el('spn').style.display = 'none';
                 });
         }
 
-        let intervalId;
+        function fillRepTable(bodyId, rows) {
+            const tbody = el(bodyId);
+            tbody.innerHTML = '';
+            rows.forEach(rep => {
+                const tr = document.createElement('tr');
+                const nameTd = document.createElement('td');
+                nameTd.textContent = rep.name;
+                const salesTd = document.createElement('td');
+                salesTd.className = 'mono';
+                salesTd.textContent = 'Rs. ' + parseFloat(rep.total_sales).toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+                tr.appendChild(nameTd);
+                tr.appendChild(salesTd);
+                tbody.appendChild(tr);
+            });
+        }
 
-        // document.addEventListener('DOMContentLoaded', function () {
-        //     // Initial load
-        //     loadDashboardData();
+        function fillOrdersTable(bodyId, orders, idField) {
+            const tbody = el(bodyId);
+            tbody.innerHTML = '';
+            orders.forEach((order, index) => {
+                const tr = document.createElement('tr');
 
-        //     // Refresh every 5 minutes (300000 milliseconds)
-        //     intervalId = setInterval(loadDashboardData, 20000);
-        // });
+                const idxTd = document.createElement('td');
+                idxTd.textContent = index + 1;
 
-        // document.addEventListener('beforeunload', function () {
-        //     clearInterval(intervalId);
-        // });
+                const orderIdTd = document.createElement('td');
+                orderIdTd.className = 'mono';
+                orderIdTd.textContent = order[idField];
 
-        // Disable any refresh link after it is clicked (works for every link,
-        // and safely does nothing for roles where these links are not rendered)
+                const outletTd = document.createElement('td');
+                outletTd.textContent = order.shop_name || order.name || order.shop;
+
+                const deliveryTd = document.createElement('td');
+                deliveryTd.innerHTML = order.time_period
+                    ? '<span class="status-pill status-pending">' + order.time_period + '</span>'
+                    : 'N/A';
+
+                const createdTd = document.createElement('td');
+                createdTd.textContent = new Date(order.order_created_at).toLocaleString();
+
+                const amountTd = document.createElement('td');
+                amountTd.className = 'mono';
+                amountTd.textContent = 'Rs. ' + parseFloat(order.total_price).toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+
+                tr.appendChild(idxTd);
+                tr.appendChild(orderIdTd);
+                tr.appendChild(outletTd);
+                tr.appendChild(deliveryTd);
+                tr.appendChild(createdTd);
+                tr.appendChild(amountTd);
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Disable any refresh link after it is clicked
         document.querySelectorAll('.refresh-link').forEach(function (link) {
             link.addEventListener('click', function () {
                 this.classList.add('disabled');
@@ -1032,7 +643,4 @@
 
         initialLoad();
     </script>
-
-</body>
-
-</html>
+@endpush
