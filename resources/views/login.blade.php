@@ -7,157 +7,251 @@
     <title>PEOPLES BAKERS | Login</title>
     <link rel="icon" href="{{ asset('assets/images/logo.png') }}">
 
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
     <!-- Google Fonts (Inter - Modern & Clean) -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        :root {
-            --primary: #d32f2f;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #1e1e2f 0%, #2a2a44 100%);
             min-height: 100vh;
+            background: #ffffff;
+            color: #1a1a1a;
+        }
+
+        .login-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ---------- Left : form panel ---------- */
+        .login-panel {
+            flex: 0 0 42%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0;
-            color: #fff;
+            padding: 3rem 2rem;
+            background: #fff;
         }
 
-        .login-card {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            max-width: 420px;
+        .login-box {
             width: 100%;
-            padding: 2.5rem;
-            transition: all 0.3s ease;
+            max-width: 380px;
         }
 
-        .login-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+        .login-box h1 {
+            font-size: 1.75rem;
+            font-weight: 400;
+            margin-bottom: 0.75rem;
+            color: #111;
         }
 
-        .logo-img {
-            width: 200px;
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            margin-bottom: 40px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        h2 {
+        .login-box h1 strong {
             font-weight: 700;
-            text-align: center;
-            margin-bottom: 0.5rem;
-            color: #fff;
         }
 
-        .splash-description {
-            text-align: center;
+        .login-subtitle {
+            font-size: 0.9rem;
+            color: #9aa0a6;
+            line-height: 1.5;
+            margin-bottom: 2.25rem;
+        }
+
+        /* Grouped input card like the reference */
+        .input-group-card {
+            border: 1px solid #e3e6ea;
+            border-radius: 6px;
+            background: #fff;
+            margin-bottom: 1.1rem;
+            overflow: hidden;
+        }
+
+        .field {
+            padding: 0.7rem 1rem 0.75rem;
+        }
+
+        .field+.field {
+            border-top: 1px solid #e3e6ea;
+        }
+
+        .field label {
             display: block;
-            margin-bottom: 2rem;
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 1.05rem;
-        }
-
-        .form-control {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #fff;
-            padding: 14px 16px;
-            border-radius: 12px;
-            font-size: 1.05rem;
-            transition: all 0.3s ease;
-        }
-
-        .form-control:focus {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: var(--primary);
-            color: #fff;
-            box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.2);
-        }
-
-        .form-control::placeholder {
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #d32f2f, #f44336);
-            border: none;
-            padding: 14px;
-            font-size: 1.1rem;
+            font-size: 0.62rem;
             font-weight: 600;
-            border-radius: 12px;
-            transition: all 0.3s ease;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #b3b8bf;
+            margin-bottom: 0.25rem;
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(211, 47, 47, 0.4);
+        .field input {
+            width: 100%;
+            border: none;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            color: #222;
+            background: transparent;
         }
 
-        #lg_warn {
-            min-height: 24px;
+        .field input::placeholder {
+            color: #c2c7cd;
+        }
+
+        /* remember / forgot row */
+        .options-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+
+        .remember {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 0.82rem;
+            color: #444;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .remember input {
+            width: 15px;
+            height: 15px;
+            accent-color: #2f80ed;
+            cursor: pointer;
+        }
+
+        .forgot-link {
+            font-size: 0.82rem;
+            color: #8a8f96;
+            text-decoration: underline;
+        }
+
+        .forgot-link:hover {
+            color: #2f80ed;
+        }
+
+        .error-msg {
+            color: #d32f2f;
+            font-size: 0.85rem;
             margin-bottom: 1rem;
+            min-height: 1rem;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 0.85rem;
+            background: #2f80ed;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.15s ease;
+        }
+
+        .btn-login:hover {
+            background: #1f6fdb;
+            transform: translateY(-1px);
         }
 
         .footer-text {
-            text-align: center;
-            margin-top: 2rem;
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.5);
+            margin-top: 2.5rem;
+            font-size: 0.78rem;
+            color: #b3b8bf;
+        }
+
+        /* ---------- Right : image panel ---------- */
+        .image-panel {
+            flex: 1 1 58%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .image-panel img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+        }
+
+        /* ---------- Responsive ---------- */
+        @media (max-width: 820px) {
+            .image-panel {
+                display: none;
+            }
+
+            .login-panel {
+                flex: 1 1 100%;
+            }
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <div class="login-card mx-auto">
-            <!-- Logo -->
-            <img src="{{ asset('assets/images/logo.png') }}" alt="Peoples Bakers Logo" class="logo-img">
+    <div class="login-wrapper">
 
-            <h2>Welcome Back</h2>
-            <span class="splash-description">Please sign in to continue</span>
+        <!-- Left : login form -->
+        <div class="login-panel">
+            <div class="login-box">
+                <h1>Login to <strong>Peoples Bakers</strong></h1>
+                <p class="login-subtitle">Welcome back. Please sign in to your account to continue managing your orders.</p>
 
-            <form action="{{ route('login') }}" method="POST">
-                @csrf
+                <form action="{{ route('login') }}" method="POST">
+                    @csrf
 
-                <div class="mb-3">
-                    <input type="email" class="form-control form-control-lg" placeholder="Email Address" id="email"
-                        name="email" autocomplete="off" required>
+                    <div class="input-group-card">
+                        <div class="field">
+                            <label for="email">Username</label>
+                            <input type="email" id="email" name="email" placeholder="your-email@gmail.com"
+                                value="{{ old('email') }}" autocomplete="off" required autofocus>
+                        </div>
+                        <div class="field">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" name="password" placeholder="Your Password" required>
+                        </div>
+                    </div>
+
+                    <div class="options-row">
+                        <label class="remember">
+                            <input type="checkbox" name="remember" checked>
+                            Remember me
+                        </label>
+                        <a href="{{ route('password.request') }}" class="forgot-link">Forgot Password</a>
+                    </div>
+
+                    <div class="error-msg" id="lg_warn">
+                        @if ($errors->any())
+                            {{ $errors->first() }}
+                        @endif
+                    </div>
+
+                    <button type="submit" class="btn-login" id="loginbtn">Log In</button>
+                </form>
+
+                <div class="footer-text">
+                    &copy; {{ date('Y') }} Peoples Bakers
                 </div>
-
-                <div class="mb-4">
-                    <input type="password" class="form-control form-control-lg" placeholder="Password" id="password"
-                        name="password" required>
-                </div>
-
-                <h4 class="text-danger text-center mb-3" id="lg_warn"></h4>
-
-                <button type="submit" class="btn btn-primary btn-lg w-100" id="loginbtn">
-                    Sign In
-                </button>
-            </form>
-
-            <div class="footer-text">
-                &copy; {{ date('Y') }} Peoples Bakers
             </div>
         </div>
-    </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- Right : image -->
+        <div class="image-panel">
+            <img src="{{ asset('assets/images/login-bg.jpg') }}" alt="Peoples Bakers">
+        </div>
+
+    </div>
 </body>
 
 </html>
